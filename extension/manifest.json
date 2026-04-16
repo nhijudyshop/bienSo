@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VPA Token Helper",
-  "version": "2.0",
+  "version": "2.1",
   "description": "Proxy VPA API calls cho bien-so.vercel.app, bypass Cloudflare + CORS",
   "permissions": [
     "declarativeNetRequest"
@@ -25,17 +25,21 @@
         "http://localhost:3000/*",
         "http://localhost:3001/*"
       ],
+      "js": ["interceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://bien-so.vercel.app/*",
+        "http://localhost:3000/*",
+        "http://localhost:3001/*"
+      ],
       "js": ["bridge.js"],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "world": "ISOLATED"
     }
   ],
-  "externally_connectable": {
-    "matches": [
-      "https://bien-so.vercel.app/*",
-      "http://localhost:3000/*",
-      "http://localhost:3001/*"
-    ]
-  },
   "declarative_net_request": {
     "rule_resources": [
       {

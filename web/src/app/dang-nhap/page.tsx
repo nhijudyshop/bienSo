@@ -9,7 +9,7 @@ import { VPA_URL } from "@/lib/constants";
 // Bookmarklet: chạy trên VPA → đọc token → postMessage về opener + copy clipboard → đóng popup
 const BOOKMARKLET_CODE = `javascript:void(function(){var t='';for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.length>100&&(k.toLowerCase().includes('token')||k.toLowerCase().includes('auth'))){t=v;break}}if(!t){alert('Không tìm thấy token. Hãy đăng nhập trước.')}else{navigator.clipboard.writeText(t).catch(function(){});if(window.opener){try{window.opener.postMessage({type:'VPA_TOKEN',token:t},'*')}catch(e){}}window.close()}})()`;
 
-type PageState = "idle" | "waiting" | "token";
+type PageState = "idle" | "waiting" | "paste" | "token";
 
 export default function DangNhapPage() {
   const router = useRouter();
@@ -77,18 +77,18 @@ export default function DangNhapPage() {
       pollRef.current = setInterval(async () => {
         if (popup.closed) {
           if (pollRef.current) clearInterval(pollRef.current);
+          popupRef.current = null;
           // Try reading token from clipboard (bookmarklet copies it)
           try {
             const clip = await navigator.clipboard.readText();
-            if (clip && clip.length > 100 && clip.startsWith("ey")) {
-              // Looks like a JWT token
-              submitToken(clip);
+            if (clip && clip.length > 100) {
+              submitToken(clip.trim());
               return;
             }
           } catch {
-            // Clipboard permission denied - fallback to manual
+            // Clipboard permission denied - show paste button
           }
-          setState("token");
+          setState("paste");
         }
       }, 500);
     } else {
@@ -223,6 +223,63 @@ export default function DangNhapPage() {
                   className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-secondary py-2.5 rounded-lg text-sm transition-colors"
                 >
                   Dán token thủ công
+                </button>
+              </div>
+            </div>
+          )}
+
+          {state === "paste" && (
+            <div className="space-y-4 text-center">
+              <div className="py-4">
+                <div className="w-14 h-14 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-7 h-7 text-accent-green" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <p className="text-text-primary font-medium">Đã đăng nhập xong?</p>
+                <p className="text-text-secondary text-sm mt-1">
+                  Bấm nút bên dưới để dán token từ clipboard
+                </p>
+              </div>
+
+              <button
+                onClick={async () => {
+                  try {
+                    const clip = await navigator.clipboard.readText();
+                    if (clip && clip.length > 100) {
+                      submitToken(clip.trim());
+                    } else {
+                      setError("Clipboard không chứa token hợp lệ");
+                      setState("token");
+                    }
+                  } catch {
+                    setState("token");
+                  }
+                }}
+                disabled={loading}
+                className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {loading ? "Đang xác thực..." : "📋 Dán token & Đăng nhập"}
+              </button>
+
+              {error && (
+                <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={openVpaLogin}
+                  className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-primary py-2.5 rounded-lg text-sm transition-colors"
+                >
+                  Thử lại
+                </button>
+                <button
+                  onClick={() => { setState("token"); setError(""); }}
+                  className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-secondary py-2.5 rounded-lg text-sm transition-colors"
+                >
+                  Dán thủ công
                 </button>
               </div>
             </div>

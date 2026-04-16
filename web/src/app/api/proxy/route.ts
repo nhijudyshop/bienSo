@@ -75,6 +75,59 @@ const ALLOWED_ENDPOINTS = [
   "/web-api/user-bidding/api/publish/get-current-publish",
   "/web-api/user-bidding/api/publish/get-current-register",
   "/web-api/user-bidding/api/auction-history/auction-history-detail",
+  // Cart mutations
+  "/web-api/user-bidding/api/cart/add-item",
+  "/web-api/user-bidding/api/cart/remove-item",
+  // Wishlist mutations
+  "/web-api/user-bidding/api/wishlist/add-item",
+  "/web-api/user-bidding/api/wishlist/remove-item",
+  // Orders
+  "/web-api/user-bidding/api/order/create-order",
+  "/web-api/user-bidding/api/order/create-pre-order",
+  "/web-api/user-bidding/api/order/get-order-detail-by-orderId",
+  "/web-api/user-bidding/api/order/get-order-fee",
+  "/web-api/user-bidding/api/order/check-status-order",
+  "/web-api/user-bidding/api/order/update-order-payment-method",
+  "/web-api/user-bidding/api/order/remove-multi-orders",
+  "/web-api/user-bidding/api/order/get-online-methods",
+  "/web-api/user-bidding/api/order/get-qr-code",
+  "/web-api/user-bidding/api/order/get-bank-qr",
+  "/web-api/user-bidding/api/order/get-ewallet-qr",
+  // Policy
+  "/web-api/user-bidding/api/policy/get-auction-policy",
+  "/web-api/user-bidding/api/policy/approve-auction-policy",
+  // Document
+  "/web-api/user-bidding/api/document/user/upload",
+  "/web-api/user-bidding/api/document/user/download",
+  "/web-api/user-bidding/api/document/preSignedUrl",
+  // User account
+  "/web-api/user-bidding/api/user/change-password",
+  "/web-api/user-bidding/api/user/update-person-profile",
+  "/web-api/user-bidding/api/user/v2/update-person-profile",
+  "/web-api/user-bidding/api/user/update-phone",
+  // Account auth
+  "/web-api/user-bidding/api/account/logout",
+  "/web-api/user-bidding/api/account/authenticate",
+  "/web-api/user-bidding/api/account/get-config-pr",
+  "/web-api/user-bidding/api/account/get-recover-password-code",
+  "/web-api/user-bidding/api/account/check-recover-password-code",
+  "/web-api/user-bidding/api/account/recover-password",
+  // Bidding
+  "/web-api/user-bidding/api/bidding/",
+  // Complaint
+  "/web-api/user-bidding/complaint/",
+  // Banner
+  "/web-api/user-bidding/banner/",
+  // Payment
+  "/web-api/user-payment/api/payment/",
+  // Notifications
+  "/web-api/user-bidding/api/notification/subcribe-user-device",
+  // Announcement plan
+  "/web-api/user-bidding/api/announcement-plan/",
+  // eKYC
+  "/web-api/user-bidding/api/ekyc/",
+  // Third-party
+  "/web-api/user-bidding/api/third-party/vneid/",
 ];
 
 const AUTH_REQUIRED_PREFIXES = [
@@ -87,6 +140,9 @@ const AUTH_REQUIRED_PREFIXES = [
   "/web-api/user-bidding/api/auction-history/",
   "/web-api/user-bidding/api/publish/get-all-registered",
   "/web-api/user-payment/",
+  "/web-api/user-bidding/api/bidding/",
+  "/web-api/user-bidding/api/policy/",
+  "/web-api/user-bidding/api/ekyc/",
 ];
 
 function isAllowedEndpoint(endpoint: string): boolean {

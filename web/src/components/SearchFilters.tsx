@@ -48,6 +48,15 @@ export default function SearchFilters({
     }
   }, [showSession]);
 
+  // Debounced auto-search when any filter changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch(filters);
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, filters.provinceCode, filters.announcementCode, filters.colorCode]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSearch(filters);

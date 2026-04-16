@@ -219,6 +219,91 @@ export async function getWinnerPriceHistory(params: {
   });
 }
 
+// --- Cart ---
+export async function addToCart(bksId: string): Promise<unknown> {
+  return poster(`/web-api/user-bidding/api/cart/add-item/${bksId}`, {});
+}
+
+export async function removeFromCart(bksId: string): Promise<unknown> {
+  return fetcher(`/web-api/user-bidding/api/cart/remove-item/${bksId}`, { method: "DELETE" });
+}
+
+// --- Wishlist ---
+export async function addToWishlist(bksId: string): Promise<unknown> {
+  return poster(`/web-api/user-bidding/api/wishlist/add-item/${bksId}`, {});
+}
+
+export async function removeFromWishlist(bksId: string): Promise<unknown> {
+  return fetcher(`/web-api/user-bidding/api/wishlist/remove-item/${bksId}`, { method: "DELETE" });
+}
+
+// --- Orders ---
+export async function createOrder(body: unknown): Promise<unknown> {
+  return poster("/web-api/user-bidding/api/order/create-order", body);
+}
+
+export async function getOrderDetail(orderId: string): Promise<unknown> {
+  return fetcher(`/web-api/user-bidding/api/order/get-order-detail-by-orderId?orderId=${orderId}`);
+}
+
+export async function getOrderFee(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/order/get-order-fee");
+}
+
+export async function getOnlinePaymentMethods(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/order/get-online-methods");
+}
+
+export async function getQrCode(body: unknown): Promise<unknown> {
+  return poster("/web-api/user-bidding/api/order/get-qr-code", body);
+}
+
+export async function getBankQr(body: unknown): Promise<unknown> {
+  return poster("/web-api/user-bidding/api/order/get-bank-qr", body);
+}
+
+export async function removeOrders(orderIds: string[]): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/order/remove-multi-orders", {
+    method: "DELETE",
+    body: JSON.stringify({ orderIds }),
+  });
+}
+
+// --- Policy ---
+export async function getAuctionPolicy(orderId: string): Promise<unknown> {
+  return fetcher(`/web-api/user-bidding/api/policy/get-auction-policy?orderId=${orderId}`);
+}
+
+export async function approveAuctionPolicy(body: unknown): Promise<unknown> {
+  return poster("/web-api/user-bidding/api/policy/approve-auction-policy", body);
+}
+
+// --- Account ---
+export async function getAccountInfo(): Promise<unknown> {
+  const data = await fetcher<{ success: boolean; result: unknown }>("/web-api/user-bidding/api/user/get-information-account");
+  return data.result;
+}
+
+export async function changePassword(body: { oldPassword: string; newPassword: string }): Promise<unknown> {
+  return poster("/web-api/user-bidding/api/user/change-password", body);
+}
+
+// --- Complaint ---
+export async function getComplaintTopics(): Promise<unknown[]> {
+  const data = await fetcher<{ success: boolean; result: unknown[] }>("/web-api/user-bidding/complaint/get-list-topic");
+  return data.result ?? [];
+}
+
+export async function createComplaint(body: unknown): Promise<unknown> {
+  return poster("/web-api/user-bidding/complaint/create-customer-complaint", body);
+}
+
+// --- Banks ---
+export async function getAllBanks(): Promise<unknown[]> {
+  const data = await fetcher<{ success: boolean; result: unknown[] }>("/web-api/user-payment/api/payment/categories/get-all-bank");
+  return data.result ?? [];
+}
+
 // --- Helpers ---
 
 export function formatPrice(price: number): string {

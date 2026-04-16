@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getAnnouncementPlans, formatPrice } from "@/lib/api";
+import { getAnnouncementPlans, formatPrice, addToCart } from "@/lib/api";
 import { VPA_URL } from "@/lib/constants";
 import type { AnnouncementPlan } from "@/types";
 import PlateNumber from "@/components/PlateNumber";
@@ -11,6 +11,9 @@ export default function DangKyDauGiaPage() {
   const [results, setResults] = useState<AnnouncementPlan[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -25,6 +28,25 @@ export default function DangKyDauGiaPage() {
       setResults([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAddToCart(bksId: string) {
+    setAddingIds((prev) => new Set(prev).add(bksId));
+    setMessage(null);
+    try {
+      await addToCart(bksId);
+      setAddedIds((prev) => new Set(prev).add(bksId));
+      setMessage({ type: "success", text: "Đã thêm biển số vào giỏ hàng thành công!" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Không thể thêm vào giỏ hàng";
+      setMessage({ type: "error", text: msg.includes("401") ? "Vui lòng đăng nhập để thêm giỏ hàng" : msg });
+    } finally {
+      setAddingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(bksId);
+        return next;
+      });
     }
   }
 
@@ -50,6 +72,17 @@ export default function DangKyDauGiaPage() {
           </div>
         ))}
       </div>
+
+      {/* Toast message */}
+      {message && (
+        <div className={`rounded-xl px-5 py-3 text-sm mb-4 border ${
+          message.type === "success"
+            ? "bg-accent-green/10 border-accent-green/30 text-accent-green"
+            : "bg-accent-red/10 border-accent-red/30 text-accent-red"
+        }`}>
+          {message.text}
+        </div>
+      )}
 
       {/* Search */}
       <form onSubmit={handleSearch} className="bg-bg-secondary rounded-xl p-5 mb-6 border border-border">
@@ -90,22 +123,45 @@ export default function DangKyDauGiaPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((item) => (
-                    <tr key={item.bksId} className="border-b border-border hover:bg-bg-card transition-colors">
-                      <td className="px-4 py-3">
-                        <PlateNumber plate={item.bks} colorCode={item.colorCode} />
-                      </td>
-                      <td className="px-4 py-3 text-sm">{item.announcementNumber}</td>
-                      <td className="px-4 py-3 text-sm">{item.provinceName}</td>
-                      <td className="px-4 py-3 text-sm text-right text-accent-orange">{formatPrice(item.startingPrice)}</td>
-                      <td className="px-4 py-3 text-center">
-                        <a href={`/dang-ky-dau-gia?bks=${item.bks}`}
-                          className="bg-accent-green hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block">
-                          Đăng ký đấu giá
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
+                  {results.map((item) => {
+                    const isAdding = addingIds.has(item.bksId);
+                    const isAdded = addedIds.has(item.bksId);
+                    return (
+                      <tr key={item.bksId} className="border-b border-border hover:bg-bg-card transition-colors">
+                        <td className="px-4 py-3">
+                          <PlateNumber plate={item.bks} colorCode={item.colorCode} />
+                        </td>
+                        <td className="px-4 py-3 text-sm">{item.announcementNumber}</td>
+                        <td className="px-4 py-3 text-sm">{item.provinceName}</td>
+                        <td className="px-4 py-3 text-sm text-right text-accent-orange">{formatPrice(item.startingPrice)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => handleAddToCart(item.bksId)}
+                            disabled={isAdding || isAdded}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block ${
+                              isAdded
+                                ? "bg-gray-600 text-gray-300 cursor-default"
+                                : "bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white"
+                            }`}
+                          >
+                            {isAdding ? (
+                              <span className="flex items-center gap-1">
+                                <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                Đang thêm...
+                              </span>
+                            ) : isAdded ? (
+                              "Đã thêm ✓"
+                            ) : (
+                              "Thêm giỏ hàng"
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -115,7 +171,7 @@ export default function DangKyDauGiaPage() {
 
       {/* Notice */}
       <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-xl px-5 py-4 text-sm text-accent-blue mt-6">
-        Để hoàn tất đăng ký đấu giá (thêm giỏ hàng, thanh toán cọc, chấp thuận quy chế), vui lòng thao tác tại{" "}
+        Để hoàn tất đăng ký đấu giá (thanh toán cọc, chấp thuận quy chế), vui lòng thao tác tại{" "}
         <a href={VPA_URL} target="_blank" rel="noopener noreferrer" className="underline font-medium">dgbs.vpa.com.vn</a>
       </div>
     </div>

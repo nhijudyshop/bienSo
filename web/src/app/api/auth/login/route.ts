@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
           const res = NextResponse.json({
             success: true,
             message: "Đăng nhập thành công",
-            user: profileData.result,
+            user: profileData.result ?? null,
           });
           res.cookies.set("vpa_token", token, {
             httpOnly: true,

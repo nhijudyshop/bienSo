@@ -32,16 +32,16 @@ export default function DangNhapPage() {
               <span className="text-white font-bold text-2xl">V</span>
             </div>
             <h2 className="text-xl font-bold mb-2">
-              Xin chao, {user.fullName || user.phoneNumber || "ban"}
+              Xin chào, {user.fullName || user.phoneNumber || "bạn"}
             </h2>
             <p className="text-text-secondary text-sm mb-6">
-              Ban da dang nhap thanh cong
+              Bạn đã đăng nhập thành công
             </p>
             <Link
               href="/thong-tin/tai-khoan"
               className="inline-block bg-accent-green hover:bg-green-600 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors"
             >
-              Di den tai khoan
+              Đi đến tài khoản
             </Link>
           </div>
         </div>
@@ -55,15 +55,15 @@ export default function DangNhapPage() {
     setNeedsCaptcha(false);
 
     if (!phone || !password) {
-      setError("Vui long nhap day du thong tin");
+      setError("Vui lòng nhập đầy đủ thông tin");
       return;
     }
     if (!PHONE_REGEX.test(phone)) {
-      setError("So dien thoai khong hop le (VD: 0912345678)");
+      setError("Số điện thoại không hợp lệ (VD: 0912345678)");
       return;
     }
     if (password.length < 8 || password.length > 16) {
-      setError("Mat khau phai tu 8-16 ky tu");
+      setError("Mật khẩu phải từ 8-16 ký tự");
       return;
     }
 
@@ -73,13 +73,13 @@ export default function DangNhapPage() {
       if (result.success) {
         router.push("/thong-tin/tai-khoan");
       } else {
-        setError(result.error || "Dang nhap that bai");
+        setError(result.error || "Đăng nhập thất bại");
         if (result.needsCaptcha) {
           setNeedsCaptcha(true);
         }
       }
     } catch {
-      setError("Loi ket noi. Vui long thu lai.");
+      setError("Lỗi kết nối. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -91,11 +91,11 @@ export default function DangNhapPage() {
 
     const trimmed = token.trim();
     if (!trimmed) {
-      setError("Vui long nhap token");
+      setError("Vui lòng nhập token");
       return;
     }
     if (trimmed.length < 50) {
-      setError("Token khong hop le (qua ngan)");
+      setError("Token không hợp lệ (quá ngắn)");
       return;
     }
 
@@ -105,10 +105,10 @@ export default function DangNhapPage() {
       if (result.success) {
         router.push("/thong-tin/tai-khoan");
       } else {
-        setError(result.error || "Token khong hop le");
+        setError(result.error || "Token không hợp lệ");
       }
     } catch {
-      setError("Loi ket noi. Vui long thu lai.");
+      setError("Lỗi kết nối. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -123,9 +123,9 @@ export default function DangNhapPage() {
             <div className="w-16 h-16 bg-accent-green rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-2xl">V</span>
             </div>
-            <h1 className="text-2xl font-bold">Dang nhap</h1>
+            <h1 className="text-2xl font-bold">Đăng nhập</h1>
             <p className="text-text-secondary text-sm mt-2">
-              Dang nhap vao he thong dau gia bien so xe
+              Đăng nhập vào hệ thống đấu giá biển số xe
             </p>
           </div>
 
@@ -139,7 +139,7 @@ export default function DangNhapPage() {
                   : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Mat khau
+              Mật khẩu
             </button>
             <button
               onClick={() => { setMode("token"); setError(""); }}
@@ -158,13 +158,13 @@ export default function DangNhapPage() {
               {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                  So dien thoai
+                  Số điện thoại
                 </label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Nhap so dien thoai"
+                  placeholder="Nhập số điện thoại"
                   className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
                 />
               </div>
@@ -172,14 +172,14 @@ export default function DangNhapPage() {
               {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                  Mat khau
+                  Mật khẩu
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Nhap mat khau"
+                    placeholder="Nhập mật khẩu"
                     className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm pr-12 focus:outline-none focus:border-accent-blue"
                   />
                   <button
@@ -187,7 +187,7 @@ export default function DangNhapPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary text-sm"
                   >
-                    {showPassword ? "An" : "Hien"}
+                    {showPassword ? "Ẩn" : "Hiện"}
                   </button>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export default function DangNhapPage() {
               {/* Captcha hint */}
               {needsCaptcha && (
                 <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-lg px-4 py-3 text-sm text-accent-blue">
-                  VPA yeu cau reCAPTCHA khi dang nhap bang mat khau. Hay chuyen sang tab{" "}
+                  VPA yêu cầu reCAPTCHA khi đăng nhập bằng mật khẩu. Hãy chuyển sang tab{" "}
                   <button
                     type="button"
                     onClick={() => { setMode("token"); setError(""); setNeedsCaptcha(false); }}
@@ -210,7 +210,7 @@ export default function DangNhapPage() {
                   >
                     Token
                   </button>{" "}
-                  de dang nhap.
+                  để đăng nhập.
                 </div>
               )}
 
@@ -220,24 +220,24 @@ export default function DangNhapPage() {
                 disabled={loading}
                 className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
               >
-                {loading ? "Dang dang nhap..." : "Dang nhap"}
+                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </button>
             </form>
           ) : (
             <form onSubmit={handleTokenLogin} className="space-y-4">
               {/* Token instructions */}
               <div className="bg-bg-card border border-border rounded-lg p-4 text-sm text-text-secondary space-y-2">
-                <p className="font-medium text-text-primary">Huong dan lay token:</p>
+                <p className="font-medium text-text-primary">Hướng dẫn lấy token:</p>
                 <ol className="list-decimal list-inside space-y-1 text-xs">
                   <li>
-                    Dang nhap tai{" "}
+                    Đăng nhập tại{" "}
                     <a href={VPA_URL} target="_blank" rel="noopener noreferrer" className="text-accent-blue underline">
                       dgbs.vpa.com.vn
                     </a>
                   </li>
-                  <li>Mo DevTools (F12) &rarr; tab Application</li>
-                  <li>Local Storage &rarr; tim key chua &quot;token&quot;</li>
-                  <li>Copy gia tri token va dan vao day</li>
+                  <li>Mở DevTools (F12) &rarr; tab Application</li>
+                  <li>Local Storage &rarr; tìm key chứa &quot;token&quot;</li>
+                  <li>Copy giá trị token và dán vào đây</li>
                 </ol>
               </div>
 
@@ -249,7 +249,7 @@ export default function DangNhapPage() {
                 <textarea
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
-                  placeholder="Dan JWT token tai day..."
+                  placeholder="Dán JWT token tại đây..."
                   rows={4}
                   className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue font-mono text-xs"
                 />
@@ -268,7 +268,7 @@ export default function DangNhapPage() {
                 disabled={loading}
                 className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
               >
-                {loading ? "Dang xac thuc..." : "Dang nhap bang token"}
+                {loading ? "Đang xác thực..." : "Đăng nhập bằng token"}
               </button>
             </form>
           )}
@@ -276,28 +276,28 @@ export default function DangNhapPage() {
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-border"></div>
-            <span className="text-text-secondary text-xs">HOAC</span>
+            <span className="text-text-secondary text-xs">HOẶC</span>
             <div className="flex-1 h-px bg-border"></div>
           </div>
 
-          {/* VNeID */}
+          {/* VPA direct login */}
           <a
             href={`${VPA_URL}/dang-nhap`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full bg-bg-card hover:bg-bg-input border border-border text-text-primary py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
           >
-            Dang nhap tren dgbs.vpa.com.vn
+            Đăng nhập trên dgbs.vpa.com.vn
           </a>
 
           {/* Register link */}
           <p className="text-center text-sm text-text-secondary mt-6">
-            Chua co tai khoan?{" "}
+            Chưa có tài khoản?{" "}
             <Link
               href="/dang-ky"
               className="text-accent-green hover:underline font-medium"
             >
-              Dang ky ngay
+              Đăng ký ngay
             </Link>
           </p>
         </div>

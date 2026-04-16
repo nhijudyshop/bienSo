@@ -41,8 +41,8 @@ export default function TaiKhoanPage() {
     return (
       <div className="bg-accent-red/10 border border-accent-red/30 rounded-xl p-6 text-accent-red text-sm">
         {error.includes("401") || error.includes("UNAUTHENTICATED")
-          ? <span>Chua dang nhap. <a href="/dang-nhap" className="underline font-medium">Dang nhap ngay</a></span>
-          : `Loi: ${error}`}
+          ? <span>Chưa đăng nhập. <a href="/dang-nhap" className="underline font-medium">Đăng nhập ngay</a></span>
+          : `Lỗi: ${error}`}
       </div>
     );
   }

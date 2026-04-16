@@ -6,13 +6,13 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const NAV_ITEMS = [
-  { href: "/danh-sach-cong-bo", label: "Danh sach cong bo" },
-  { href: "/danh-sach-bien", label: "Danh sach chinh thuc" },
-  { href: "/kho-bien-so", label: "Kho bien so" },
-  { href: "/ket-qua-dau-gia", label: "Ket qua dau gia" },
-  { href: "/phong-dau-gia", label: "Phong dau gia" },
-  { href: "/quy-che", label: "Quy che" },
-  { href: "/hoi-dap", label: "Hoi dap" },
+  { href: "/danh-sach-cong-bo", label: "Danh sách công bố" },
+  { href: "/danh-sach-bien", label: "Danh sách chính thức" },
+  { href: "/kho-bien-so", label: "Kho biển số" },
+  { href: "/ket-qua-dau-gia", label: "Kết quả đấu giá" },
+  { href: "/phong-dau-gia", label: "Phòng đấu giá" },
+  { href: "/quy-che", label: "Quy chế" },
+  { href: "/hoi-dap", label: "Hỏi đáp" },
 ];
 
 export default function Header() {
@@ -41,7 +41,7 @@ export default function Header() {
                 pathname === "/" ? "text-accent-green" : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Trang chu
+              Trang chủ
             </Link>
             {NAV_ITEMS.map((item) => (
               <Link
@@ -74,7 +74,7 @@ export default function Header() {
                     </span>
                   </div>
                   <span className="hidden sm:block max-w-[120px] truncate">
-                    {user.fullName || user.phoneNumber || "Tai khoan"}
+                    {user.fullName || user.phoneNumber || "Tài khoản"}
                   </span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M19 9l-7 7-7-7" />
@@ -90,21 +90,21 @@ export default function Header() {
                         onClick={() => setShowDropdown(false)}
                         className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card"
                       >
-                        Tai khoan
+                        Tài khoản
                       </Link>
                       <Link
                         href="/thong-tin/gio-hang"
                         onClick={() => setShowDropdown(false)}
                         className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card"
                       >
-                        Gio hang
+                        Giỏ hàng
                       </Link>
                       <Link
                         href="/thong-tin/thong-bao"
                         onClick={() => setShowDropdown(false)}
                         className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card"
                       >
-                        Thong bao
+                        Thông báo
                       </Link>
                       <div className="border-t border-border my-1" />
                       <button
@@ -114,7 +114,7 @@ export default function Header() {
                         }}
                         className="block w-full text-left px-4 py-2 text-sm text-accent-red hover:bg-bg-card"
                       >
-                        Dang xuat
+                        Đăng xuất
                       </button>
                     </div>
                   </>
@@ -130,13 +130,13 @@ export default function Header() {
                       : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
-                  Dang nhap
+                  Đăng nhập
                 </Link>
                 <Link
                   href="/dang-ky"
                   className="bg-accent-green hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
-                  Dang ky
+                  Đăng ký
                 </Link>
               </>
             )}
@@ -161,7 +161,7 @@ export default function Header() {
           <nav className="lg:hidden border-t border-border py-3 space-y-1">
             <Link href="/" onClick={() => setMenuOpen(false)}
               className={`block px-3 py-2 rounded-md text-sm ${pathname === "/" ? "text-accent-green font-medium" : "text-text-secondary"}`}>
-              Trang chu
+              Trang chủ
             </Link>
             {NAV_ITEMS.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
@@ -174,21 +174,21 @@ export default function Header() {
                 <>
                   <Link href="/thong-tin/tai-khoan" onClick={() => setMenuOpen(false)}
                     className="block px-3 py-2 rounded-md text-sm text-text-secondary">
-                    Tai khoan ({user.fullName || user.phoneNumber})
+                    Tài khoản ({user.fullName || user.phoneNumber})
                   </Link>
                   <button
                     onClick={async () => { setMenuOpen(false); await logout(); }}
                     className="block w-full text-left px-3 py-2 rounded-md text-sm text-accent-red"
                   >
-                    Dang xuat
+                    Đăng xuất
                   </button>
                 </>
               ) : (
                 <>
                   <Link href="/dang-nhap" onClick={() => setMenuOpen(false)}
-                    className="block px-3 py-2 rounded-md text-sm text-text-secondary">Dang nhap</Link>
+                    className="block px-3 py-2 rounded-md text-sm text-text-secondary">Đăng nhập</Link>
                   <Link href="/dang-ky" onClick={() => setMenuOpen(false)}
-                    className="block px-3 py-2 rounded-md text-sm text-text-secondary">Dang ky</Link>
+                    className="block px-3 py-2 rounded-md text-sm text-text-secondary">Đăng ký</Link>
                 </>
               )}
             </div>

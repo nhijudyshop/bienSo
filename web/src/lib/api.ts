@@ -9,7 +9,18 @@ import type {
   PaginatedResponse,
 } from "@/types";
 
-const CF_PROXY = "https://bienso.nhijudyshop.workers.dev";
+import fallbackData from "@/lib/fallback-data.json";
+
+const CF_PROXY = "https://vpa-proxy.nhijudyshop.workers.dev";
+const fallback = fallbackData as Record<string, unknown>;
+
+function getFallback<T>(endpoint: string): T | null {
+  if (fallback[endpoint]) return fallback[endpoint] as T;
+  for (const key of Object.keys(fallback)) {
+    if (endpoint.includes(key) || key.includes(endpoint)) return fallback[key] as T;
+  }
+  return null;
+}
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${CF_PROXY}?endpoint=${encodeURIComponent(endpoint)}`;
@@ -19,17 +30,14 @@ async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
       headers: { "Content-Type": "application/json", ...options?.headers },
     });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
-    return res.json();
-  } catch (err) {
-    // Fallback to bundled data
-    const { default: fallbackData } = await import("@/lib/fallback-data.json");
-    const fb = fallbackData as Record<string, unknown>;
-    const data = fb[endpoint];
-    if (data) return data as T;
-    for (const key of Object.keys(fb)) {
-      if (endpoint.includes(key) || key.includes(endpoint)) return fb[key] as T;
-    }
-    throw err;
+    const data = await res.json();
+    // Check if response is HTML (Cloudflare block page)
+    if (typeof data === "string" && data.includes("<!DOCTYPE")) throw new Error("Blocked");
+    return data;
+  } catch {
+    const fb = getFallback<T>(endpoint);
+    if (fb) return fb;
+    throw new Error(`No data for ${endpoint}`);
   }
 }
 

@@ -21,7 +21,7 @@ export default function HoiDapPage() {
       <h1 className="text-2xl font-bold text-center mb-6">HỎI ĐÁP</h1>
 
       {loading ? (
-        <div className="text-center text-text-secondary py-12">Đang tải...</div>
+        <div className="text-center text-text-secondary py-12">Đang tải dữ liệu...</div>
       ) : faqs.length === 0 ? (
         <div className="text-center text-text-secondary py-12">Chưa có câu hỏi nào</div>
       ) : (

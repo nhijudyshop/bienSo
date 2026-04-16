@@ -73,7 +73,7 @@ export default function QuyChePage() {
           Tài liệu quy chế
         </h2>
         {loading ? (
-          <div className="px-4 py-8 text-center text-text-secondary">Đang tải...</div>
+          <div className="px-4 py-8 text-center text-text-secondary">Đang tải dữ liệu...</div>
         ) : (
           <div className="divide-y divide-border">
             {files.map((file, idx) => (

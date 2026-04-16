@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { AnnouncementPlan } from "@/types";
 import { getAnnouncementPlans, formatPrice } from "@/lib/api";
+import { VPA_URL } from "@/lib/constants";
 import SearchFilters, { type SearchParams } from "@/components/SearchFilters";
 import PlateNumber from "@/components/PlateNumber";
 
@@ -56,7 +57,7 @@ export default function TatCaBienSoPage() {
       <SearchFilters onSearch={handleSearch} />
 
       {loading ? (
-        <div className="text-center text-text-secondary py-12">Đang tải...</div>
+        <div className="text-center text-text-secondary py-12">Đang tải dữ liệu...</div>
       ) : plates.length === 0 ? (
         <div className="text-center text-text-secondary py-12">Không có dữ liệu</div>
       ) : (
@@ -87,7 +88,7 @@ export default function TatCaBienSoPage() {
                   <div className="text-text-secondary truncate">{item.provinceName}</div>
                 </div>
                 <a
-                  href="https://dgbs.vpa.com.vn"
+                  href={VPA_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full mt-3 bg-accent-green hover:bg-green-600 text-white py-1.5 rounded-lg text-xs font-medium transition-colors text-center"

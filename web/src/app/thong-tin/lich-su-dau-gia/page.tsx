@@ -18,7 +18,7 @@ export default function LichSuDauGiaPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="text-center text-text-secondary py-12">Đang tải...</div>;
+  if (loading) return <div className="text-center text-text-secondary py-12">Đang tải dữ liệu...</div>;
 
   if (error) {
     return (

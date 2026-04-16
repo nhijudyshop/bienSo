@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { AnnouncementPlan } from "@/types";
 import { getAnnouncementPlans, formatPrice } from "@/lib/api";
+import { VPA_URL } from "@/lib/constants";
 import SearchFilters, { type SearchParams } from "@/components/SearchFilters";
 import PlateNumber from "@/components/PlateNumber";
 
@@ -101,7 +102,7 @@ export default function HomePage() {
                     <td className="px-4 py-3 text-sm">{item.auctionDate || "Chưa có lịch"}</td>
                     <td className="px-4 py-3 text-center">
                       <a
-                        href="https://dgbs.vpa.com.vn"
+                        href={VPA_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-accent-green hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block"

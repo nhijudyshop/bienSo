@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getOrdersWaitAuction, formatPrice } from "@/lib/api";
+import { VPA_URL, AUCTION_ROOM_URL } from "@/lib/constants";
 import PlateNumber from "@/components/PlateNumber";
 
 interface WaitAuctionOrder {
@@ -47,7 +48,7 @@ export default function PhongDauGiaPage() {
       <p className="text-text-secondary text-center text-sm mb-8">
         Phòng đấu giá trực tuyến hoạt động tại{" "}
         <a
-          href="https://phongdau.vpa.com.vn"
+          href={AUCTION_ROOM_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="text-accent-blue underline"
@@ -88,7 +89,7 @@ export default function PhongDauGiaPage() {
         </div>
 
         {loading ? (
-          <div className="px-4 py-12 text-center text-text-secondary">Đang tải...</div>
+          <div className="px-4 py-12 text-center text-text-secondary">Đang tải dữ liệu...</div>
         ) : error ? (
           <div className="px-6 py-8 text-center">
             <p className="text-text-secondary text-sm mb-4">
@@ -97,7 +98,7 @@ export default function PhongDauGiaPage() {
                 : "Không thể tải dữ liệu"}
             </p>
             <a
-              href="https://dgbs.vpa.com.vn/dang-nhap"
+              href={`${VPA_URL}/dang-nhap`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-accent-green text-white px-4 py-2 rounded-lg text-sm inline-block"
@@ -123,7 +124,7 @@ export default function PhongDauGiaPage() {
                 <div className="text-right">
                   <div className="text-sm text-accent-orange">{formatPrice(order.deposit)}</div>
                   <a
-                    href="https://phongdau.vpa.com.vn"
+                    href={AUCTION_ROOM_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-accent-blue hover:underline"

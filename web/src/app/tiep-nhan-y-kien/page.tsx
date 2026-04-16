@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { VPA_URL } from "@/lib/constants";
 
 const TOPICS = [
   "Đăng ký tài khoản",
@@ -56,7 +57,7 @@ export default function TiepNhanYKienPage() {
           </p>
           <p className="text-text-secondary text-xs mb-6">
             Lưu ý: Để gửi khiếu nại chính thức, vui lòng sử dụng{" "}
-            <a href="https://dgbs.vpa.com.vn/tiep-nhan-y-kien" target="_blank" rel="noopener noreferrer"
+            <a href={`${VPA_URL}/tiep-nhan-y-kien`} target="_blank" rel="noopener noreferrer"
               className="text-accent-blue underline">dgbs.vpa.com.vn</a>
           </p>
           <button onClick={() => { setSubmitted(false); setFormData({ topic: "", title: "", content: "", email: "", phone: "" }); }}
@@ -77,7 +78,7 @@ export default function TiepNhanYKienPage() {
 
       <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-xl px-4 py-3 text-sm text-accent-blue mb-6">
         Để gửi khiếu nại chính thức (có xác thực), vui lòng sử dụng{" "}
-        <a href="https://dgbs.vpa.com.vn/tiep-nhan-y-kien" target="_blank" rel="noopener noreferrer"
+        <a href={`${VPA_URL}/tiep-nhan-y-kien`} target="_blank" rel="noopener noreferrer"
           className="underline font-medium">dgbs.vpa.com.vn</a>
       </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getAuctionResultDetail, formatPrice } from "@/lib/api";
+import { VPA_URL } from "@/lib/constants";
 import PlateNumber from "@/components/PlateNumber";
 
 interface ResultDetail {
@@ -72,7 +73,7 @@ export default function KetQuaChiTietPage() {
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">
                     Không có dữ liệu chi tiết. Dữ liệu có thể chưa được cập nhật hoặc cần đăng nhập tại{" "}
-                    <a href="https://dgbs.vpa.com.vn" target="_blank" rel="noopener noreferrer" className="text-accent-blue underline">dgbs.vpa.com.vn</a>
+                    <a href={VPA_URL} target="_blank" rel="noopener noreferrer" className="text-accent-blue underline">dgbs.vpa.com.vn</a>
                   </td>
                 </tr>
               ) : (

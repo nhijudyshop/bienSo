@@ -21,7 +21,7 @@ export default function DanhSachCongBoPage() {
 
       <div className="bg-bg-secondary rounded-xl overflow-hidden">
         {loading ? (
-          <div className="px-4 py-12 text-center text-text-secondary">Đang tải...</div>
+          <div className="px-4 py-12 text-center text-text-secondary">Đang tải dữ liệu...</div>
         ) : files.length === 0 ? (
           <div className="px-4 py-12 text-center text-text-secondary">Không có thông báo nào</div>
         ) : (

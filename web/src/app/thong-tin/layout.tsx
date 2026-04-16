@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const SIDEBAR_ITEMS = [
   { href: "/thong-tin/tai-khoan", label: "Thông tin tài khoản" },
+  { href: "/thong-tin/xac-minh-tai-khoan", label: "Xác minh tài khoản" },
   { href: "/thong-tin/gio-hang", label: "Giỏ hàng" },
   { href: "/thong-tin/bien-da-dang-ky", label: "Biển số chờ đấu giá" },
   { href: "/thong-tin/lich-su-dau-gia", label: "Lịch sử đấu giá" },

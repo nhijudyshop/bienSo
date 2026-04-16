@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { VPA_URL } from "@/lib/constants";
 
 type AccountType = "personal" | "organization";
 
@@ -76,7 +77,7 @@ export default function DangKyPage() {
           <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-lg px-4 py-3 text-sm text-accent-blue mb-4">
             Để đăng ký, vui lòng sử dụng{" "}
             <a
-              href="https://dgbs.vpa.com.vn"
+              href={VPA_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="underline font-medium"

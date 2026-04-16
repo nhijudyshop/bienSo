@@ -149,6 +149,20 @@ export default function DangNhapPage() {
 
           {state === "idle" && (
             <div className="space-y-4">
+              {/* Bookmarklet - prominent */}
+              <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-xl p-4 text-center space-y-2">
+                <p className="text-sm text-text-primary font-medium">Bước 1: Kéo nút này vào thanh bookmark (1 lần)</p>
+                <a
+                  href={BOOKMARKLET_CODE}
+                  onClick={(e) => e.preventDefault()}
+                  draggable
+                  className="inline-block bg-accent-blue text-white px-5 py-2.5 rounded-lg text-sm font-medium cursor-grab active:cursor-grabbing shadow-lg"
+                >
+                  🔑 Lấy VPA Token
+                </a>
+                <p className="text-xs text-text-secondary">↑ Kéo thả vào thanh bookmark của trình duyệt</p>
+              </div>
+
               {/* Main action */}
               <button
                 onClick={openVpaLogin}
@@ -157,29 +171,17 @@ export default function DangNhapPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
                 </svg>
-                Đăng nhập qua VPA
+                Bước 2: Đăng nhập qua VPA
               </button>
 
-              <div className="bg-bg-card border border-border rounded-lg p-4 text-xs text-text-secondary space-y-2">
-                <p>Mở trang đăng nhập VPA trong popup → đăng nhập bình thường → token tự động chuyển về.</p>
-                <div className="border-t border-border pt-2 mt-2">
-                  <p className="font-medium text-text-primary mb-1">Chuẩn bị (chỉ cần làm 1 lần):</p>
-                  <p>Kéo nút bên dưới vào <strong>thanh bookmark</strong>. Sau khi đăng nhập VPA, bấm bookmark này để lấy token:</p>
-                  <a
-                    href={BOOKMARKLET_CODE}
-                    onClick={(e) => e.preventDefault()}
-                    draggable
-                    className="inline-block mt-1 bg-accent-blue/20 text-accent-blue px-3 py-1.5 rounded text-xs font-medium border border-accent-blue/30 cursor-grab active:cursor-grabbing"
-                  >
-                    🔑 Lấy VPA Token
-                  </a>
-                </div>
-              </div>
+              <p className="text-xs text-text-secondary text-center">
+                Sau khi đăng nhập VPA xong → bấm bookmark &quot;🔑 Lấy VPA Token&quot; → tự động xong
+              </p>
 
               {/* Manual token input toggle */}
               <button
                 onClick={() => setState("token")}
-                className="w-full text-text-secondary hover:text-text-primary text-sm transition-colors py-2"
+                className="w-full text-text-secondary hover:text-text-primary text-xs transition-colors py-1"
               >
                 Đã có token? Dán trực tiếp →
               </button>
@@ -198,14 +200,21 @@ export default function DangNhapPage() {
               </div>
 
               {/* Instructions */}
-              <div className="bg-bg-card border border-border rounded-lg p-4 text-left text-xs text-text-secondary space-y-2">
+              <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-lg p-4 text-left text-sm space-y-3">
                 <p className="font-medium text-text-primary">Sau khi đăng nhập VPA xong:</p>
-                <p>Bấm bookmark <strong>&quot;🔑 Lấy VPA Token&quot;</strong> trên thanh bookmark → popup tự đóng → trang này tự đăng nhập.</p>
-                <div className="border-t border-border pt-2 mt-2">
-                  <p className="text-text-secondary">Nếu chưa có bookmarklet, mở Console (F12) trên popup VPA và chạy:</p>
-                  <code className="block bg-bg-input p-2 rounded text-[10px] mt-1 break-all select-all">
-                    {`window.opener.postMessage({type:'VPA_TOKEN',token:Object.values(localStorage).find(v=>v.length>100)},'*');close()`}
-                  </code>
+                <p className="text-text-secondary text-xs">
+                  Bấm bookmark <strong className="text-accent-blue">&quot;🔑 Lấy VPA Token&quot;</strong> trên thanh bookmark → popup tự đóng → trang này tự đăng nhập.
+                </p>
+                <div className="border-t border-border pt-2">
+                  <p className="text-text-secondary text-xs mb-1">Chưa có bookmarklet? Kéo vào bookmark bar:</p>
+                  <a
+                    href={BOOKMARKLET_CODE}
+                    onClick={(e) => e.preventDefault()}
+                    draggable
+                    className="inline-block bg-accent-blue text-white px-4 py-2 rounded-lg text-xs font-medium cursor-grab active:cursor-grabbing"
+                  >
+                    🔑 Lấy VPA Token
+                  </a>
                 </div>
               </div>
 

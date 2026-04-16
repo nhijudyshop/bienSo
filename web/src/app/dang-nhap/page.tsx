@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { VPA_URL } from "@/lib/constants";
 
-// Bookmarklet: chạy trên VPA → đọc token → postMessage về opener + copy clipboard → đóng popup
-const BOOKMARKLET_CODE = `javascript:void(function(){var t='';for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.length>100&&(k.toLowerCase().includes('token')||k.toLowerCase().includes('auth'))){t=v;break}}if(!t){alert('Không tìm thấy token. Hãy đăng nhập trước.')}else{navigator.clipboard.writeText(t).catch(function(){});if(window.opener){try{window.opener.postMessage({type:'VPA_TOKEN',token:t},'*')}catch(e){}}window.close()}})()`;
+const CONSOLE_CMD = `window.opener.postMessage({type:'VPA_TOKEN',token:Object.values(localStorage).find(v=>v&&v.length>100)},'*');close()`;
 
 type PageState = "idle" | "waiting" | "paste" | "token";
 
@@ -18,15 +17,13 @@ export default function DangNhapPage() {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
   const popupRef = useRef<Window | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Listen for postMessage from popup
   const handleMessage = useCallback((e: MessageEvent) => {
     if (e.data?.type === "VPA_TOKEN" && e.data.token) {
       setToken(e.data.token);
-      setState("token");
-      // Auto-submit
       submitToken(e.data.token);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -59,7 +56,6 @@ export default function DangNhapPage() {
   }
 
   function openVpaLogin() {
-    // Open popup centered
     const w = 500, h = 700;
     const left = window.screenX + (window.outerWidth - w) / 2;
     const top = window.screenY + (window.outerHeight - h) / 2;
@@ -72,28 +68,34 @@ export default function DangNhapPage() {
     if (popup) {
       popupRef.current = popup;
       setState("waiting");
+      setCopied(false);
 
-      // Poll to detect popup closed
       pollRef.current = setInterval(async () => {
         if (popup.closed) {
           if (pollRef.current) clearInterval(pollRef.current);
           popupRef.current = null;
-          // Try reading token from clipboard (bookmarklet copies it)
           try {
             const clip = await navigator.clipboard.readText();
             if (clip && clip.length > 100) {
               submitToken(clip.trim());
               return;
             }
-          } catch {
-            // Clipboard permission denied - show paste button
-          }
+          } catch { /* clipboard denied */ }
           setState("paste");
         }
       }, 500);
     } else {
-      // Popup blocked
       setError("Popup bị chặn. Hãy cho phép popup trong trình duyệt.");
+    }
+  }
+
+  async function copyCommand() {
+    try {
+      await navigator.clipboard.writeText(CONSOLE_CMD);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      // fallback: select the code block
     }
   }
 
@@ -107,7 +109,6 @@ export default function DangNhapPage() {
     submitToken(trimmed);
   }
 
-  // Already logged in
   if (user) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
@@ -120,10 +121,7 @@ export default function DangNhapPage() {
               Xin chào, {user.fullName || user.phoneNumber || "bạn"}
             </h2>
             <p className="text-text-secondary text-sm mb-6">Bạn đã đăng nhập thành công</p>
-            <Link
-              href="/thong-tin/tai-khoan"
-              className="inline-block bg-accent-green hover:bg-green-600 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors"
-            >
+            <Link href="/thong-tin/tai-khoan" className="inline-block bg-accent-green hover:bg-green-600 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors">
               Đi đến tài khoản
             </Link>
           </div>
@@ -149,36 +147,20 @@ export default function DangNhapPage() {
 
           {state === "idle" && (
             <div className="space-y-4">
-              {/* Bookmarklet - prominent */}
-              <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-xl p-4 text-center space-y-2">
-                <p className="text-sm text-text-primary font-medium">Bước 1: Kéo nút này vào thanh bookmark (1 lần)</p>
-                <a
-                  href={BOOKMARKLET_CODE}
-                  onClick={(e) => e.preventDefault()}
-                  draggable
-                  className="inline-block bg-accent-blue text-white px-5 py-2.5 rounded-lg text-sm font-medium cursor-grab active:cursor-grabbing shadow-lg"
-                >
-                  🔑 Lấy VPA Token
-                </a>
-                <p className="text-xs text-text-secondary">↑ Kéo thả vào thanh bookmark của trình duyệt</p>
-              </div>
-
-              {/* Main action */}
               <button
                 onClick={openVpaLogin}
-                className="w-full bg-accent-green hover:bg-green-600 text-white py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-accent-green hover:bg-green-600 text-white py-3.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
                 </svg>
-                Bước 2: Đăng nhập qua VPA
+                Đăng nhập qua VPA
               </button>
 
-              <p className="text-xs text-text-secondary text-center">
-                Sau khi đăng nhập VPA xong → bấm bookmark &quot;🔑 Lấy VPA Token&quot; → tự động xong
-              </p>
+              <div className="bg-bg-card border border-border rounded-lg p-3 text-xs text-text-secondary">
+                <p>Mở popup VPA → đăng nhập → lấy token → tự động hoàn tất.</p>
+              </div>
 
-              {/* Manual token input toggle */}
               <button
                 onClick={() => setState("token")}
                 className="w-full text-text-secondary hover:text-text-primary text-xs transition-colors py-1"
@@ -189,43 +171,80 @@ export default function DangNhapPage() {
           )}
 
           {state === "waiting" && (
-            <div className="space-y-4 text-center">
-              {/* Waiting animation */}
-              <div className="py-6">
-                <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+            <div className="space-y-4">
+              {/* Spinner */}
+              <div className="text-center py-4">
+                <div className="w-10 h-10 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-3" />
                 <p className="text-text-primary font-medium">Đang chờ đăng nhập...</p>
-                <p className="text-text-secondary text-sm mt-1">
-                  Đăng nhập trên cửa sổ VPA vừa mở
-                </p>
+                <p className="text-text-secondary text-xs mt-1">Đăng nhập trên cửa sổ VPA vừa mở</p>
               </div>
 
-              {/* Instructions */}
-              <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-lg p-4 text-left text-sm space-y-3">
-                <p className="font-medium text-text-primary">Sau khi đăng nhập VPA xong:</p>
-                <p className="text-text-secondary text-xs">
-                  Bấm bookmark <strong className="text-accent-blue">&quot;🔑 Lấy VPA Token&quot;</strong> trên thanh bookmark → popup tự đóng → trang này tự đăng nhập.
-                </p>
-                <div className="border-t border-border pt-2">
-                  <p className="text-text-secondary text-xs mb-1">Chưa có bookmarklet? Kéo vào bookmark bar:</p>
-                  <a
-                    href={BOOKMARKLET_CODE}
-                    onClick={(e) => e.preventDefault()}
-                    draggable
-                    className="inline-block bg-accent-blue text-white px-4 py-2 rounded-lg text-xs font-medium cursor-grab active:cursor-grabbing"
-                  >
-                    🔑 Lấy VPA Token
-                  </a>
+              {/* 3-step instructions */}
+              <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border">
+                  <p className="text-sm font-medium text-text-primary">Sau khi đăng nhập VPA xong:</p>
+                </div>
+
+                {/* Step 1: Copy command */}
+                <div className="px-4 py-3 border-b border-border">
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 bg-accent-green rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-text-primary">Bấm copy lệnh:</p>
+                      <button
+                        onClick={copyCommand}
+                        className={`mt-2 w-full py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                          copied
+                            ? "bg-accent-green/20 text-accent-green border border-accent-green/30"
+                            : "bg-accent-blue text-white hover:bg-blue-600"
+                        }`}
+                      >
+                        {copied ? "✓ Đã copy!" : "📋 Copy lệnh lấy token"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2: Open console */}
+                <div className="px-4 py-3 border-b border-border">
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 bg-bg-input rounded-full flex items-center justify-center text-text-secondary text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                    <div className="text-sm text-text-secondary">
+                      Trên <strong className="text-text-primary">popup VPA</strong>, mở Console:
+                      <div className="flex gap-2 mt-1.5">
+                        <kbd className="bg-bg-input border border-border px-2 py-1 rounded text-xs font-mono">Ctrl</kbd>
+                        <span className="text-xs self-center">+</span>
+                        <kbd className="bg-bg-input border border-border px-2 py-1 rounded text-xs font-mono">Shift</kbd>
+                        <span className="text-xs self-center">+</span>
+                        <kbd className="bg-bg-input border border-border px-2 py-1 rounded text-xs font-mono">J</kbd>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3: Paste & Enter */}
+                <div className="px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 bg-bg-input rounded-full flex items-center justify-center text-text-secondary text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                    <div className="text-sm text-text-secondary">
+                      Dán và chạy:
+                      <div className="flex gap-2 mt-1.5">
+                        <kbd className="bg-bg-input border border-border px-2 py-1 rounded text-xs font-mono">Ctrl+V</kbd>
+                        <span className="text-xs self-center">→</span>
+                        <kbd className="bg-bg-input border border-border px-2 py-1 rounded text-xs font-mono">Enter</kbd>
+                        <span className="text-xs self-center">→ tự động xong ✓</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    popupRef.current?.focus();
-                  }}
-                  className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-primary py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  onClick={() => popupRef.current?.focus()}
+                  className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-primary py-2.5 rounded-lg text-sm transition-colors"
                 >
-                  Mở lại popup
+                  Mở popup
                 </button>
                 <button
                   onClick={() => setState("token")}
@@ -246,11 +265,8 @@ export default function DangNhapPage() {
                   </svg>
                 </div>
                 <p className="text-text-primary font-medium">Đã đăng nhập xong?</p>
-                <p className="text-text-secondary text-sm mt-1">
-                  Bấm nút bên dưới để dán token từ clipboard
-                </p>
+                <p className="text-text-secondary text-sm mt-1">Bấm để dán token từ clipboard</p>
               </div>
-
               <button
                 onClick={async () => {
                   try {
@@ -261,35 +277,19 @@ export default function DangNhapPage() {
                       setError("Clipboard không chứa token hợp lệ");
                       setState("token");
                     }
-                  } catch {
-                    setState("token");
-                  }
+                  } catch { setState("token"); }
                 }}
                 disabled={loading}
-                className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
               >
                 {loading ? "Đang xác thực..." : "📋 Dán token & Đăng nhập"}
               </button>
-
               {error && (
-                <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
-                  {error}
-                </div>
+                <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">{error}</div>
               )}
-
               <div className="flex gap-2">
-                <button
-                  onClick={openVpaLogin}
-                  className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-primary py-2.5 rounded-lg text-sm transition-colors"
-                >
-                  Thử lại
-                </button>
-                <button
-                  onClick={() => { setState("token"); setError(""); }}
-                  className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-secondary py-2.5 rounded-lg text-sm transition-colors"
-                >
-                  Dán thủ công
-                </button>
+                <button onClick={openVpaLogin} className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-primary py-2.5 rounded-lg text-sm transition-colors">Thử lại</button>
+                <button onClick={() => { setState("token"); setError(""); }} className="flex-1 bg-bg-card hover:bg-bg-input border border-border text-text-secondary py-2.5 rounded-lg text-sm transition-colors">Dán thủ công</button>
               </div>
             </div>
           )}
@@ -297,56 +297,25 @@ export default function DangNhapPage() {
           {state === "token" && (
             <form onSubmit={handleManualSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                  JWT Token
-                </label>
-                <textarea
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  placeholder="Dán JWT token tại đây..."
-                  rows={4}
-                  autoFocus
-                  className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue font-mono text-xs"
-                />
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">JWT Token</label>
+                <textarea value={token} onChange={(e) => setToken(e.target.value)} placeholder="Dán JWT token tại đây..." rows={4} autoFocus
+                  className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue font-mono text-xs" />
               </div>
-
-              {error && (
-                <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
-              >
+              {error && <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">{error}</div>}
+              <button type="submit" disabled={loading} className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors">
                 {loading ? "Đang xác thực..." : "Đăng nhập"}
               </button>
-
-              <button
-                type="button"
-                onClick={() => { setState("idle"); setError(""); }}
-                className="w-full text-text-secondary hover:text-text-primary text-sm transition-colors py-2"
-              >
-                ← Quay lại
-              </button>
+              <button type="button" onClick={() => { setState("idle"); setError(""); }} className="w-full text-text-secondary hover:text-text-primary text-sm transition-colors py-2">← Quay lại</button>
             </form>
           )}
 
-          {/* Error for idle state */}
           {state === "idle" && error && (
-            <div className="mt-4 bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
-              {error}
-            </div>
+            <div className="mt-4 bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">{error}</div>
           )}
 
-          {/* Register link */}
           <p className="text-center text-sm text-text-secondary mt-6">
             Chưa có tài khoản?{" "}
-            <Link href="/dang-ky" className="text-accent-green hover:underline font-medium">
-              Đăng ký ngay
-            </Link>
+            <Link href="/dang-ky" className="text-accent-green hover:underline font-medium">Đăng ký ngay</Link>
           </p>
         </div>
       </div>

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "Access-Control-Allow-Origin", "operation": "set", "value": "*" },
+        { "header": "Access-Control-Allow-Methods", "operation": "set", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "header": "Access-Control-Allow-Headers", "operation": "set", "value": "Content-Type, Authorization, csrf, Accept" },
+        { "header": "Access-Control-Allow-Credentials", "operation": "set", "value": "true" }
+      ]
+    },
+    "condition": {
+      "urlFilter": "dgbs.vpa.com.vn",
+      "initiatorDomains": ["bien-so.vercel.app", "localhost"],
+      "resourceTypes": ["xmlhttprequest", "other"]
+    }
+  }
+]

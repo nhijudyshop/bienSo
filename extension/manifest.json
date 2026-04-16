@@ -1,17 +1,42 @@
 {
   "manifest_version": 3,
   "name": "VPA Token Helper",
-  "version": "1.0",
-  "description": "Tự động lấy token sau khi đăng nhập VPA và gửi về bien-so.vercel.app",
-  "permissions": ["activeTab"],
+  "version": "2.0",
+  "description": "Proxy VPA API calls cho bien-so.vercel.app, bypass Cloudflare + CORS",
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback"
+  ],
+  "host_permissions": [
+    "https://dgbs.vpa.com.vn/*"
+  ],
   "content_scripts": [
     {
       "matches": ["https://dgbs.vpa.com.vn/*"],
       "js": ["inject.js"],
       "run_at": "document_start",
       "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://bien-so.vercel.app/*",
+        "http://localhost:3000/*",
+        "http://localhost:3001/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "cors_rules",
+        "enabled": true,
+        "path": "cors_rules.json"
+      }
+    ]
+  },
   "icons": {
     "48": "icon48.png",
     "128": "icon128.png"

@@ -40,9 +40,9 @@ export default function TaiKhoanPage() {
   if (error) {
     return (
       <div className="bg-accent-red/10 border border-accent-red/30 rounded-xl p-6 text-accent-red text-sm">
-        {error.includes("401") || error.includes("Chưa đăng nhập")
-          ? "Chưa đăng nhập. Chạy: node grab-token.js để lấy token."
-          : `Lỗi: ${error}`}
+        {error.includes("401") || error.includes("UNAUTHENTICATED")
+          ? <span>Chua dang nhap. <a href="/dang-nhap" className="underline font-medium">Dang nhap ngay</a></span>
+          : `Loi: ${error}`}
       </div>
     );
   }

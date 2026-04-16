@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import fallbackData from "@/lib/fallback-data.json";
 
 const TARGET = process.env.API_TARGET || "https://dgbs.vpa.com.vn";
-const JWT_TOKEN = process.env.VPA_JWT_TOKEN || "";
+const ENV_JWT_TOKEN = process.env.VPA_JWT_TOKEN || "";
 const CSRF_TOKEN = process.env.VPA_CSRF_TOKEN || "";
 const COOKIES = process.env.VPA_COOKIES || "";
+
+function getJwtToken(request: NextRequest): string {
+  return request.cookies.get("vpa_token")?.value || ENV_JWT_TOKEN;
+}
 
 const fallback = fallbackData as Record<string, unknown>;
 
@@ -77,7 +81,7 @@ function getFallback(endpoint: string): unknown | null {
   return null;
 }
 
-function buildHeaders(endpoint: string, extraHeaders?: Record<string, string>): Record<string, string> {
+function buildHeaders(endpoint: string, jwtToken: string, extraHeaders?: Record<string, string>): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/json",
     "User-Agent": "VPA-Web-Proxy/1.0",
@@ -87,11 +91,10 @@ function buildHeaders(endpoint: string, extraHeaders?: Record<string, string>): 
   if (COOKIES) {
     headers["Cookie"] = COOKIES;
   }
-  if (CSRF_TOKEN) {
-    headers["csrf"] = CSRF_TOKEN;
-  }
-  if (needsAuth(endpoint) && JWT_TOKEN) {
-    headers["Authorization"] = `Bearer ${JWT_TOKEN}`;
+  const csrf = CSRF_TOKEN || Buffer.from(`${Date.now()}`).toString("base64");
+  headers["csrf"] = csrf;
+  if (needsAuth(endpoint) && jwtToken) {
+    headers["Authorization"] = `Bearer ${jwtToken}`;
   }
 
   return headers;
@@ -106,16 +109,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Endpoint not allowed" }, { status: 403 });
   }
 
-  if (needsAuth(endpoint) && !JWT_TOKEN) {
+  const jwtToken = getJwtToken(request);
+
+  if (needsAuth(endpoint) && !jwtToken) {
     return NextResponse.json(
-      { error: "Chưa đăng nhập. Chạy: node grab-token.js" },
+      { error: "Chưa đăng nhập", code: "UNAUTHENTICATED" },
       { status: 401 }
     );
   }
 
   try {
     const res = await fetch(`${TARGET}${endpoint}`, {
-      headers: buildHeaders(endpoint),
+      headers: buildHeaders(endpoint, jwtToken),
     });
 
     if (!res.ok) {
@@ -142,9 +147,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Endpoint not allowed" }, { status: 403 });
   }
 
-  if (needsAuth(endpoint) && !JWT_TOKEN) {
+  const jwtToken = getJwtToken(request);
+
+  if (needsAuth(endpoint) && !jwtToken) {
     return NextResponse.json(
-      { error: "Chưa đăng nhập. Chạy: node grab-token.js" },
+      { error: "Chưa đăng nhập", code: "UNAUTHENTICATED" },
       { status: 401 }
     );
   }
@@ -153,7 +160,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const res = await fetch(`${TARGET}${endpoint}`, {
       method: "POST",
-      headers: buildHeaders(endpoint, { "Content-Type": "application/json" }),
+      headers: buildHeaders(endpoint, jwtToken, { "Content-Type": "application/json" }),
       body: JSON.stringify(body),
     });
 

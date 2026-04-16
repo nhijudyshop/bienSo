@@ -3,20 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NAV_ITEMS = [
-  { href: "/danh-sach-cong-bo", label: "Danh sách công bố" },
-  { href: "/danh-sach-bien", label: "Danh sách chính thức" },
-  { href: "/kho-bien-so", label: "Kho biển số" },
-  { href: "/ket-qua-dau-gia", label: "Kết quả đấu giá" },
-  { href: "/phong-dau-gia", label: "Phòng đấu giá" },
-  { href: "/quy-che", label: "Quy chế" },
-  { href: "/hoi-dap", label: "Hỏi đáp" },
+  { href: "/danh-sach-cong-bo", label: "Danh sach cong bo" },
+  { href: "/danh-sach-bien", label: "Danh sach chinh thuc" },
+  { href: "/kho-bien-so", label: "Kho bien so" },
+  { href: "/ket-qua-dau-gia", label: "Ket qua dau gia" },
+  { href: "/phong-dau-gia", label: "Phong dau gia" },
+  { href: "/quy-che", label: "Quy che" },
+  { href: "/hoi-dap", label: "Hoi dap" },
 ];
 
 export default function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, loading, logout } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
 
   return (
     <header className="bg-bg-secondary border-b border-border sticky top-0 z-50">
@@ -38,7 +41,7 @@ export default function Header() {
                 pathname === "/" ? "text-accent-green" : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Trang chủ
+              Trang chu
             </Link>
             {NAV_ITEMS.map((item) => (
               <Link
@@ -57,22 +60,86 @@ export default function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/thong-tin/tai-khoan"
-              className={`hidden sm:block text-sm transition-colors ${
-                pathname.startsWith("/thong-tin")
-                  ? "text-accent-green font-medium"
-                  : "text-text-secondary hover:text-text-primary"
-              }`}
-            >
-              Tài khoản
-            </Link>
-            <Link
-              href="/dang-ky"
-              className="bg-accent-green hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              Đăng ký
-            </Link>
+            {loading ? (
+              <div className="w-20 h-8 bg-bg-card rounded-lg animate-pulse" />
+            ) : user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <div className="w-8 h-8 bg-accent-green/20 rounded-full flex items-center justify-center">
+                    <span className="text-accent-green font-medium text-xs">
+                      {(user.fullName || user.phoneNumber || "U").charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="hidden sm:block max-w-[120px] truncate">
+                    {user.fullName || user.phoneNumber || "Tai khoan"}
+                  </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-bg-secondary border border-border rounded-lg shadow-lg z-50 py-1">
+                      <Link
+                        href="/thong-tin/tai-khoan"
+                        onClick={() => setShowDropdown(false)}
+                        className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card"
+                      >
+                        Tai khoan
+                      </Link>
+                      <Link
+                        href="/thong-tin/gio-hang"
+                        onClick={() => setShowDropdown(false)}
+                        className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card"
+                      >
+                        Gio hang
+                      </Link>
+                      <Link
+                        href="/thong-tin/thong-bao"
+                        onClick={() => setShowDropdown(false)}
+                        className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card"
+                      >
+                        Thong bao
+                      </Link>
+                      <div className="border-t border-border my-1" />
+                      <button
+                        onClick={async () => {
+                          setShowDropdown(false);
+                          await logout();
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-accent-red hover:bg-bg-card"
+                      >
+                        Dang xuat
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/dang-nhap"
+                  className={`hidden sm:block text-sm transition-colors ${
+                    pathname === "/dang-nhap"
+                      ? "text-accent-green font-medium"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  Dang nhap
+                </Link>
+                <Link
+                  href="/dang-ky"
+                  className="bg-accent-green hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Dang ky
+                </Link>
+              </>
+            )}
             {/* Mobile menu button */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -94,7 +161,7 @@ export default function Header() {
           <nav className="lg:hidden border-t border-border py-3 space-y-1">
             <Link href="/" onClick={() => setMenuOpen(false)}
               className={`block px-3 py-2 rounded-md text-sm ${pathname === "/" ? "text-accent-green font-medium" : "text-text-secondary"}`}>
-              Trang chủ
+              Trang chu
             </Link>
             {NAV_ITEMS.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
@@ -103,10 +170,27 @@ export default function Header() {
               </Link>
             ))}
             <div className="border-t border-border pt-2 mt-2">
-              <Link href="/thong-tin/tai-khoan" onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-sm text-text-secondary">Tài khoản</Link>
-              <Link href="/tiep-nhan-y-kien" onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-sm text-text-secondary">Góp ý / Khiếu nại</Link>
+              {user ? (
+                <>
+                  <Link href="/thong-tin/tai-khoan" onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm text-text-secondary">
+                    Tai khoan ({user.fullName || user.phoneNumber})
+                  </Link>
+                  <button
+                    onClick={async () => { setMenuOpen(false); await logout(); }}
+                    className="block w-full text-left px-3 py-2 rounded-md text-sm text-accent-red"
+                  >
+                    Dang xuat
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/dang-nhap" onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm text-text-secondary">Dang nhap</Link>
+                  <Link href="/dang-ky" onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm text-text-secondary">Dang ky</Link>
+                </>
+              )}
             </div>
           </nav>
         )}

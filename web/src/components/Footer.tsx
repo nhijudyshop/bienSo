@@ -51,8 +51,8 @@ export default function Footer() {
               {[
                 { href: "/hoi-dap", label: "Hỏi đáp" },
                 { href: "/quy-che", label: "Quy chế đấu giá" },
-                { href: "/danh-sach-cong-bo", label: "Hướng dẫn đấu giá" },
-                { href: "/quy-che", label: "Điều khoản sử dụng" },
+                { href: "/thu-tuc-sau-dau-gia", label: "Thủ tục sau đấu giá" },
+                { href: "/tiep-nhan-y-kien", label: "Góp ý / Khiếu nại" },
               ].map((link, i) => (
                 <li key={i}>
                   <Link

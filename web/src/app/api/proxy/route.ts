@@ -108,15 +108,17 @@ function getFallback(endpoint: string): unknown | null {
 function buildHeaders(endpoint: string, jwtToken: string, extraHeaders?: Record<string, string>): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/json",
-    "User-Agent": "VPA-Web-Proxy/1.0",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept-Language": "vi-VN,vi;q=0.9,en;q=0.8",
+    Referer: "https://dgbs.vpa.com.vn/",
+    Origin: "https://dgbs.vpa.com.vn",
     ...extraHeaders,
   };
 
   if (COOKIES) {
     headers["Cookie"] = COOKIES;
   }
-  const csrf = CSRF_TOKEN || Buffer.from(`${Date.now()}`).toString("base64");
-  headers["csrf"] = csrf;
+  headers["csrf"] = CSRF_TOKEN || Buffer.from(`${Date.now()}`).toString("base64");
   if (needsAuth(endpoint) && jwtToken) {
     headers["Authorization"] = `Bearer ${jwtToken}`;
   }

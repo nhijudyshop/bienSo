@@ -32,32 +32,32 @@ export default function DangKyPage() {
     setError("");
 
     if (!formData.fullName || !formData.phone || !formData.email || !formData.idNumber || !formData.password) {
-      setError("Vui long nhap day du thong tin bat buoc");
+      setError("Vui lòng nhập đầy đủ thông tin bắt buộc");
       return;
     }
     if (!PHONE_REGEX.test(formData.phone)) {
-      setError("So dien thoai khong hop le (VD: 0912345678)");
+      setError("Số điện thoại không hợp lệ (VD: 0912345678)");
       return;
     }
     if (!EMAIL_REGEX.test(formData.email)) {
-      setError("Email khong hop le");
+      setError("Email không hợp lệ");
       return;
     }
     if (!PASSWORD_REGEX.test(formData.password)) {
-      setError("Mat khau phai tu 8-16 ky tu, bao gom chu hoa, chu thuong, so va ky tu dac biet");
+      setError("Mật khẩu phải từ 8-16 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt");
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError("Mat khau xac nhan khong khop");
+      setError("Mật khẩu xác nhận không khớp");
       return;
     }
     if (accountType === "organization" && (!formData.orgName || !formData.taxCode)) {
-      setError("Vui long nhap day du thong tin to chuc");
+      setError("Vui lòng nhập đầy đủ thông tin tổ chức");
       return;
     }
 
     setError(
-      "Chuc nang dang ky can tich hop reCAPTCHA va OTP. Vui long su dung trang chinh dgbs.vpa.com.vn"
+      "Chức năng đăng ký cần tích hợp reCAPTCHA và OTP. Vui lòng sử dụng trang chính dgbs.vpa.com.vn"
     );
   }
 
@@ -66,15 +66,15 @@ export default function DangKyPage() {
       <div className="w-full max-w-lg">
         <div className="bg-bg-secondary rounded-2xl p-8 border border-border">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold">Dang ky tai khoan</h1>
+            <h1 className="text-2xl font-bold">Đăng ký tài khoản</h1>
             <p className="text-text-secondary text-sm mt-2">
-              Tao tai khoan de tham gia dau gia bien so xe
+              Tạo tài khoản để tham gia đấu giá biển số xe
             </p>
           </div>
 
           {/* Notice */}
           <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-lg px-4 py-3 text-sm text-accent-blue mb-4">
-            De dang ky, vui long su dung{" "}
+            Để đăng ký, vui lòng sử dụng{" "}
             <a
               href="https://dgbs.vpa.com.vn"
               target="_blank"
@@ -83,7 +83,7 @@ export default function DangKyPage() {
             >
               dgbs.vpa.com.vn
             </a>{" "}
-            (can reCAPTCHA + OTP)
+            (cần reCAPTCHA + OTP)
           </div>
 
           {/* Account type toggle */}
@@ -96,7 +96,7 @@ export default function DangKyPage() {
                   : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Ca nhan
+              Cá nhân
             </button>
             <button
               onClick={() => setAccountType("organization")}
@@ -106,7 +106,7 @@ export default function DangKyPage() {
                   : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              To chuc
+              Tổ chức
             </button>
           </div>
 
@@ -114,60 +114,60 @@ export default function DangKyPage() {
             {accountType === "organization" && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1.5">Ten to chuc</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1.5">Tên tổ chức</label>
                   <input type="text" value={formData.orgName} onChange={(e) => updateField("orgName", e.target.value)}
-                    placeholder="Nhap ten to chuc" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                    placeholder="Nhập tên tổ chức" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1.5">Ma so thue</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1.5">Mã số thuế</label>
                   <input type="text" value={formData.taxCode} onChange={(e) => updateField("taxCode", e.target.value)}
-                    placeholder="Nhap ma so thue" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                    placeholder="Nhập mã số thuế" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
                 </div>
               </>
             )}
 
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                {accountType === "personal" ? "Ho va ten" : "Nguoi dai dien"}
+                {accountType === "personal" ? "Họ và tên" : "Người đại diện"}
               </label>
               <input type="text" value={formData.fullName} onChange={(e) => updateField("fullName", e.target.value)}
-                placeholder="Nhap ho va ten" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                placeholder="Nhập họ và tên" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">So CCCD/CMND</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">Số CCCD/CMND</label>
               <input type="text" value={formData.idNumber} onChange={(e) => updateField("idNumber", e.target.value)}
-                placeholder="Nhap so CCCD/CMND" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                placeholder="Nhập số CCCD/CMND" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">So dien thoai</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">Số điện thoại</label>
                 <input type="tel" value={formData.phone} onChange={(e) => updateField("phone", e.target.value)}
-                  placeholder="Nhap SDT" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                  placeholder="Nhập SĐT" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">Email</label>
                 <input type="email" value={formData.email} onChange={(e) => updateField("email", e.target.value)}
-                  placeholder="Nhap email" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                  placeholder="Nhập email" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">Mat khau</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">Mật khẩu</label>
                 <input type="password" value={formData.password} onChange={(e) => updateField("password", e.target.value)}
-                  placeholder="8-16 ky tu" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                  placeholder="8-16 ký tự" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">Xac nhan mat khau</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">Xác nhận mật khẩu</label>
                 <input type="password" value={formData.confirmPassword} onChange={(e) => updateField("confirmPassword", e.target.value)}
-                  placeholder="Nhap lai mat khau" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
+                  placeholder="Nhập lại mật khẩu" className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue" />
               </div>
             </div>
 
             <p className="text-xs text-text-secondary">
-              Mat khau: 8-16 ky tu, bao gom chu hoa, chu thuong, so va ky tu dac biet
+              Mật khẩu: 8-16 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt
             </p>
 
             {error && (
@@ -178,25 +178,25 @@ export default function DangKyPage() {
 
             <button type="submit"
               className="w-full bg-accent-green hover:bg-green-600 text-white py-3 rounded-lg text-sm font-medium transition-colors">
-              Dang ky
+              Đăng ký
             </button>
           </form>
 
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-border"></div>
-            <span className="text-text-secondary text-xs">HOAC</span>
+            <span className="text-text-secondary text-xs">HOẶC</span>
             <div className="flex-1 h-px bg-border"></div>
           </div>
 
           <button className="w-full bg-bg-card hover:bg-bg-input border border-border text-text-primary py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
             <span className="text-accent-blue font-bold">VNeID</span>
-            Dang ky bang VNeID
+            Đăng ký bằng VNeID
           </button>
 
           <p className="text-center text-sm text-text-secondary mt-6">
-            Da co tai khoan?{" "}
+            Đã có tài khoản?{" "}
             <Link href="/dang-nhap" className="text-accent-green hover:underline font-medium">
-              Dang nhap
+              Đăng nhập
             </Link>
           </p>
         </div>

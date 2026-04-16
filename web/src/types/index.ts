@@ -53,6 +53,7 @@ export interface AuctionResultSession {
   licensePlate: string;
   auctionDate: string;
   id: number;
+  colorCode?: number;
 }
 
 export interface AnnouncementPlanCode {

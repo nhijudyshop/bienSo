@@ -49,10 +49,10 @@ export default function Footer() {
             <h4 className="font-semibold mb-4 text-text-primary">Hỗ trợ</h4>
             <ul className="space-y-2">
               {[
-                { href: "/hoi-dap", label: "Hoi dap" },
-                { href: "/quy-che", label: "Quy che dau gia" },
-                { href: "/danh-sach-cong-bo", label: "Huong dan dau gia" },
-                { href: "/quy-che", label: "Dieu khoan su dung" },
+                { href: "/hoi-dap", label: "Hỏi đáp" },
+                { href: "/quy-che", label: "Quy chế đấu giá" },
+                { href: "/danh-sach-cong-bo", label: "Hướng dẫn đấu giá" },
+                { href: "/quy-che", label: "Điều khoản sử dụng" },
               ].map((link, i) => (
                 <li key={i}>
                   <Link

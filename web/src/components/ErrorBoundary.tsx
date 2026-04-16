@@ -31,13 +31,13 @@ export default class ErrorBoundary extends Component<Props, State> {
         this.props.fallback ?? (
           <div className="min-h-[40vh] flex items-center justify-center">
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-2">Da xay ra loi</h2>
-              <p className="text-text-secondary mb-4">Vui long tai lai trang</p>
+              <h2 className="text-xl font-bold mb-2">Đã xảy ra lỗi</h2>
+              <p className="text-text-secondary mb-4">Vui lòng tải lại trang</p>
               <button
                 onClick={() => this.setState({ hasError: false })}
                 className="bg-accent-blue text-white px-4 py-2 rounded-lg text-sm"
               >
-                Thu lai
+                Thử lại
               </button>
             </div>
           </div>

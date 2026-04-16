@@ -61,7 +61,7 @@ export default function KhoBienSoPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-center mb-6">KHO BIEN SO</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">KHO BIỂN SỐ</h1>
 
       <SearchFilters onSearch={handleSearch} showDate={false} showColor={false} />
 
@@ -71,23 +71,23 @@ export default function KhoBienSoPage() {
             <thead>
               <tr className="border-b border-border">
                 <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary w-16">STT</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Phien</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Bien so</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Tinh, thanh pho</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-text-secondary">Lua chon</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Phiên</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Biển số</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Tỉnh, thành phố</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-text-secondary">Lựa chọn</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">
-                    Dang tai du lieu...
+                    Đang tải dữ liệu...
                   </td>
                 </tr>
               ) : plates.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">
-                    Khong co du lieu
+                    Không có dữ liệu
                   </td>
                 </tr>
               ) : (
@@ -99,7 +99,7 @@ export default function KhoBienSoPage() {
                       <PlateNumber plate={item.licensePlate} colorCode={item.colorCode} />
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {provinceMap[item.provinceCode] || `Ma tinh: ${item.provinceCode}`}
+                      {provinceMap[item.provinceCode] || `Mã tỉnh: ${item.provinceCode}`}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <a
@@ -108,7 +108,7 @@ export default function KhoBienSoPage() {
                         rel="noopener noreferrer"
                         className="bg-accent-blue hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block"
                       >
-                        Yeu cau dau gia
+                        Yêu cầu đấu giá
                       </a>
                     </td>
                   </tr>
@@ -142,7 +142,7 @@ export default function KhoBienSoPage() {
         )}
       </div>
 
-      <div className="text-center text-text-secondary text-sm mt-4">Tong cong: {total} bien so</div>
+      <div className="text-center text-text-secondary text-sm mt-4">Tổng cộng: {total} biển số</div>
     </div>
   );
 }

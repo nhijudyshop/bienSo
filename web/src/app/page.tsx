@@ -106,7 +106,7 @@ export default function HomePage() {
                         rel="noopener noreferrer"
                         className="bg-accent-green hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block"
                       >
-                        Dang ky dau gia
+                        Đăng ký đấu giá
                       </a>
                     </td>
                   </tr>

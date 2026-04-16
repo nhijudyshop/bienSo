@@ -74,7 +74,7 @@ export default function KetQuaDauGiaPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <PlateNumber plate={item.licensePlate} colorCode={0} size="sm" />
+                      <PlateNumber plate={item.licensePlate} colorCode={item.colorCode ?? 0} size="sm" />
                     </td>
                     <td className="px-4 py-3 text-sm text-right text-accent-orange font-semibold">
                       {formatPrice(item.maxPrice)}

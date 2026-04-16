@@ -5,9 +5,9 @@ import Footer from "@/components/Footer";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
-  title: "VPA - Dau gia bien so xe o to truc tuyen",
+  title: "VPA - Đấu giá biển số xe ô tô trực tuyến",
   description:
-    "Nen tang dau gia bien so xe o to truc tuyen chinh thuc cua Viet Nam",
+    "Nền tảng đấu giá biển số xe ô tô trực tuyến chính thức của Việt Nam",
 };
 
 export default function RootLayout({

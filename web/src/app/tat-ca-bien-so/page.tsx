@@ -92,7 +92,7 @@ export default function TatCaBienSoPage() {
                   rel="noopener noreferrer"
                   className="block w-full mt-3 bg-accent-green hover:bg-green-600 text-white py-1.5 rounded-lg text-xs font-medium transition-colors text-center"
                 >
-                  Dang ky dau gia
+                  Đăng ký đấu giá
                 </a>
               </div>
             ))}

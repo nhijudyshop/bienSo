@@ -2,46 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { AnnouncementPlan } from "@/types";
-import { formatPrice } from "@/lib/api";
+import { getAnnouncementPlans, formatPrice } from "@/lib/api";
 import { VPA_URL } from "@/lib/constants";
 import SearchFilters, { type SearchParams } from "@/components/SearchFilters";
 import PlateNumber from "@/components/PlateNumber";
-
-const BASE = "/api/proxy";
-
-async function getPublishedPlates(params?: {
-  search?: string;
-  provinceCode?: string;
-  announcementCode?: string;
-  colorCode?: string;
-  page?: number;
-  size?: number;
-}) {
-  const endpoint = "/web-api/user-bidding/api/publish/get-all-publish-detail";
-  const res = await fetch(`${BASE}?endpoint=${encodeURIComponent(endpoint)}`);
-  if (!res.ok) {
-    // Fallback to list-announcement-plan
-    const fallbackEndpoint = "/search-api/search/list-announcement-plan";
-    const res2 = await fetch(`${BASE}?endpoint=${encodeURIComponent(fallbackEndpoint)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        provinceCode: params?.provinceCode ?? "",
-        announcementCode: params?.announcementCode ?? "",
-        search: params?.search ?? "",
-        colorCode: params?.colorCode ?? "",
-        page: params?.page ?? 0,
-        size: params?.size ?? 25,
-      }),
-    });
-    return res2.json();
-  }
-  const data = await res.json();
-  if (data.success && data.result) {
-    return { content: data.result, totalElements: data.result.length };
-  }
-  return data;
-}
 
 export default function DanhSachBienPage() {
   const [plates, setPlates] = useState<AnnouncementPlan[]>([]);
@@ -53,7 +17,7 @@ export default function DanhSachBienPage() {
   const fetchData = useCallback(async (filters?: SearchParams, p = 0) => {
     setLoading(true);
     try {
-      const data = await getPublishedPlates({
+      const data = await getAnnouncementPlans({
         search: filters?.search,
         provinceCode: filters?.provinceCode,
         announcementCode: filters?.announcementCode,

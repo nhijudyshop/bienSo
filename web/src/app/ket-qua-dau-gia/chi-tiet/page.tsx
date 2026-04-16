@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { getAuctionResultDetail, formatPrice } from "@/lib/api";
 import { VPA_URL } from "@/lib/constants";
@@ -15,14 +16,14 @@ interface ResultDetail {
   colorCode?: number;
 }
 
-export default function KetQuaChiTietPage() {
-  const params = useParams();
-  const id = Number(params.id);
+function KetQuaChiTietContent() {
+  const searchParams = useSearchParams();
+  const id = Number(searchParams.get("id"));
   const [details, setDetails] = useState<ResultDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) { setLoading(false); return; }
     getAuctionResultDetail(id)
       .then((data: unknown) => {
         const d = data as { content?: ResultDetail[] };
@@ -65,9 +66,7 @@ export default function KetQuaChiTietPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">
-                    Đang tải dữ liệu...
-                  </td>
+                  <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">Đang tải dữ liệu...</td>
                 </tr>
               ) : details.length === 0 ? (
                 <tr>
@@ -78,7 +77,7 @@ export default function KetQuaChiTietPage() {
                 </tr>
               ) : (
                 details.map((item, idx) => (
-                  <tr key={idx} className="border-b border-border hover:bg-bg-card transition-colors">
+                  <tr key={item.licensePlate || idx} className="border-b border-border hover:bg-bg-card transition-colors">
                     <td className="px-4 py-3 text-sm">{idx + 1}</td>
                     <td className="px-4 py-3">
                       <PlateNumber plate={item.licensePlate} colorCode={item.colorCode ?? 0} />
@@ -96,9 +95,11 @@ export default function KetQuaChiTietPage() {
         </div>
       </div>
 
-      <div className="text-center text-text-secondary text-sm mt-4">
-        {details.length} biển số
-      </div>
+      <div className="text-center text-text-secondary text-sm mt-4">{details.length} biển số</div>
     </div>
   );
+}
+
+export default function KetQuaChiTietPage() {
+  return <Suspense fallback={<div className="text-center py-12 text-text-secondary">Đang tải dữ liệu...</div>}><KetQuaChiTietContent /></Suspense>;
 }

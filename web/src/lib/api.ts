@@ -9,15 +9,43 @@ import type {
   PaginatedResponse,
 } from "@/types";
 
-const BASE = "/api/proxy";
+const IS_STATIC = typeof window !== "undefined" && !window.location.hostname.includes("localhost");
+const PROXY_BASE = "/api/proxy";
+const DIRECT_BASE = "https://dgbs.vpa.com.vn";
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}?endpoint=${encodeURIComponent(endpoint)}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers },
-  });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
+  // In dev mode, use proxy. In static export (GitHub Pages), call VPA directly.
+  if (!IS_STATIC) {
+    const res = await fetch(`${PROXY_BASE}?endpoint=${encodeURIComponent(endpoint)}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...options?.headers },
+    });
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json();
+  }
+
+  // Static mode: try direct API call (may fail due to CORS/Cloudflare)
+  try {
+    const res = await fetch(`${DIRECT_BASE}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...options?.headers,
+      },
+    });
+    if (res.ok) return res.json();
+  } catch {}
+
+  // Fallback: load from bundled fallback data
+  const { default: fallbackData } = await import("@/lib/fallback-data.json");
+  const fb = fallbackData as Record<string, unknown>;
+  const data = fb[endpoint];
+  if (data) return data as T;
+  for (const key of Object.keys(fb)) {
+    if (endpoint.includes(key) || key.includes(endpoint)) return fb[key] as T;
+  }
+  throw new Error(`No data for ${endpoint}`);
 }
 
 async function poster<T>(endpoint: string, body: unknown): Promise<T> {

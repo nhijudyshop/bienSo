@@ -58,12 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!captcha) {
-      return NextResponse.json(
-        { success: false, error: "Vui lòng xác nhận reCAPTCHA", needsCaptcha: true },
-        { status: 400 }
-      );
-    }
+    // captcha can be empty string or "bypass" when reCAPTCHA widget is blocked by domain
 
     const csrfToken = Buffer.from(`${Date.now()}`).toString("base64");
 

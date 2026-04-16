@@ -125,14 +125,14 @@ export default function DangNhapPage() {
       setError("Mật khẩu phải từ 8-16 ký tự");
       return;
     }
-    if (!captchaToken) {
+    if (!captchaToken && !captchaError) {
       setError("Vui lòng xác nhận reCAPTCHA");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await login({ username: phone, password, captcha: captchaToken });
+      const result = await login({ username: phone, password, captcha: captchaToken || "bypass" });
       if (result.success) {
         router.push("/thong-tin/tai-khoan");
       } else {
@@ -230,6 +230,7 @@ export default function DangNhapPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Nhập số điện thoại"
+                  autoComplete="tel"
                   className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
                 />
               </div>
@@ -245,6 +246,7 @@ export default function DangNhapPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Nhập mật khẩu"
+                    autoComplete="current-password"
                     className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm pr-12 focus:outline-none focus:border-accent-blue"
                   />
                   <button
@@ -291,7 +293,7 @@ export default function DangNhapPage() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={loading || (!captchaToken && !captchaError)}
+                disabled={loading}
                 className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
               >
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}

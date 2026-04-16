@@ -10,13 +10,29 @@ import type {
 } from "@/types";
 
 const BASE = "/api/proxy";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedData(endpoint: string): unknown | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const ts = parseInt(sessionStorage.getItem("vpa_cache_ts") || "0");
+    if (Date.now() - ts > CACHE_TTL) return null;
+    const cache = JSON.parse(sessionStorage.getItem("vpa_cache") || "{}");
+    return cache[endpoint] ?? null;
+  } catch { return null; }
+}
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}?endpoint=${encodeURIComponent(endpoint)}`, {
     ...options,
     headers: { "Content-Type": "application/json", ...options?.headers },
   });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) {
+    // Try sessionStorage cache (synced by extension)
+    const cached = getCachedData(endpoint);
+    if (cached) return cached as T;
+    throw new Error(`API error: ${res.status}`);
+  }
   return res.json();
 }
 

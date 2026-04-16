@@ -88,6 +88,9 @@ function onToken(token, source) {
   console.log(`[VPA Helper] ✅ Token found via ${source} (${token.length} chars)`);
   showButton();
 
+  // Sync data from VPA to bien-so (runs in browser = bypasses Cloudflare)
+  syncData(token);
+
   // Auto-send if opened from popup
   if (window.opener) {
     sendToken(token, true);
@@ -170,5 +173,52 @@ let _url = location.href;
 new MutationObserver(() => {
   if (location.href !== _url) { _url = location.href; setTimeout(tick, 1000); }
 }).observe(document.documentElement, { childList: true, subtree: true });
+
+// === Sync authenticated data to bien-so ===
+const SYNC_TARGET = "https://bien-so.vercel.app";
+const SYNC_ENDPOINTS = [
+  { endpoint: "/web-api/user-bidding/api/user/get-profile", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/cart/get-all-items", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/cart/get-items-count", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/notification/get-unread-count", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/order/get-orders-payment-status", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/order/get-orders-wait-auction", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/user/auction-result/get-history-and-result", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/notification/get-all-user-notification", method: "GET" },
+  { endpoint: "/web-api/user-bidding/api/document/v2/user/all", method: "GET" },
+];
+
+async function syncData(token) {
+  console.log("[VPA Helper] 🔄 Syncing authenticated data...");
+  const csrf = btoa(Date.now().toString());
+  const results = {};
+
+  for (const { endpoint, method } of SYNC_ENDPOINTS) {
+    try {
+      const res = await _fetch(`https://dgbs.vpa.com.vn${endpoint}`, {
+        method,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          csrf,
+        },
+      });
+      if (res.ok) {
+        results[endpoint] = await res.json();
+      }
+    } catch {}
+  }
+
+  // Send cached data to opener (bien-so page) via postMessage
+  if (window.opener) {
+    try {
+      window.opener.postMessage({ type: "VPA_SYNC", data: results }, "*");
+      console.log("[VPA Helper] ✅ Synced", Object.keys(results).length, "endpoints to opener");
+    } catch (e) {
+      console.log("[VPA Helper] ⚠️ postMessage sync failed:", e.message);
+    }
+  }
+}
 
 console.log("[VPA Helper] 🟢 Loaded - intercepting fetch/XHR/localStorage");

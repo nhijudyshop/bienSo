@@ -26,6 +26,13 @@ export default function DangNhapPage() {
       setToken(e.data.token);
       submitToken(e.data.token);
     }
+    // Cache synced VPA data in sessionStorage
+    if (e.data?.type === "VPA_SYNC" && e.data.data) {
+      try {
+        sessionStorage.setItem("vpa_cache", JSON.stringify(e.data.data));
+        sessionStorage.setItem("vpa_cache_ts", Date.now().toString());
+      } catch {}
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

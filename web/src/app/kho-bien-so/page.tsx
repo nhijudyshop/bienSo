@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Province, WarehousePlate } from "@/types";
-import { getWarehousePlates, getProvinces } from "@/lib/api";
-import { VPA_URL } from "@/lib/constants";
+import type { WarehousePlate } from "@/types";
+import { getWarehousePlates, getProvinces, addToCart } from "@/lib/api";
 import SearchFilters, { type SearchParams } from "@/components/SearchFilters";
 import PlateNumber from "@/components/PlateNumber";
 
@@ -14,6 +13,8 @@ export default function KhoBienSoPage() {
   const [loading, setLoading] = useState(true);
   const [currentFilters, setCurrentFilters] = useState<SearchParams | undefined>();
   const [provinceMap, setProvinceMap] = useState<Record<string, string>>({});
+  const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     getProvinces()
@@ -58,6 +59,29 @@ export default function KhoBienSoPage() {
     fetchData(currentFilters, p);
   }
 
+  async function handleAddToCart(plateId: string) {
+    setAddingIds((prev) => new Set(prev).add(plateId));
+    try {
+      await addToCart(plateId);
+      setAddedIds((prev) => new Set(prev).add(plateId));
+      setTimeout(() => {
+        setAddedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(plateId);
+          return next;
+        });
+      }, 2000);
+    } catch {
+      // silently fail - user can retry
+    } finally {
+      setAddingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(plateId);
+        return next;
+      });
+    }
+  }
+
   const totalPages = Math.ceil(total / 25);
 
   return (
@@ -92,26 +116,48 @@ export default function KhoBienSoPage() {
                   </td>
                 </tr>
               ) : (
-                plates.map((item, idx) => (
-                  <tr key={item.whLicensePlateId} className="border-b border-border hover:bg-bg-card transition-colors">
-                    <td className="px-4 py-3 text-sm">{page * 25 + idx + 1}</td>
-                    <td className="px-4 py-3 text-sm">{item.announcementName}</td>
-                    <td className="px-4 py-3">
-                      <PlateNumber plate={item.licensePlate} colorCode={item.colorCode} />
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {provinceMap[item.provinceCode] || `Mã tỉnh: ${item.provinceCode}`}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <a
-                        href={`/dang-ky-dau-gia?bks=${item.licensePlate}`}
-                        className="bg-accent-blue hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block"
-                      >
-                        Yêu cầu đấu giá
-                      </a>
-                    </td>
-                  </tr>
-                ))
+                plates.map((item, idx) => {
+                  const plateId = item.whLicensePlateId;
+                  const isAdding = addingIds.has(plateId);
+                  const isAdded = addedIds.has(plateId);
+                  return (
+                    <tr key={plateId} className="border-b border-border hover:bg-bg-card transition-colors">
+                      <td className="px-4 py-3 text-sm">{page * 25 + idx + 1}</td>
+                      <td className="px-4 py-3 text-sm">{item.announcementName}</td>
+                      <td className="px-4 py-3">
+                        <PlateNumber plate={item.licensePlate} colorCode={item.colorCode} />
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {provinceMap[item.provinceCode] || `Mã tỉnh: ${item.provinceCode}`}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => handleAddToCart(plateId)}
+                          disabled={isAdding || isAdded}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block ${
+                            isAdded
+                              ? "bg-gray-600 text-gray-300 cursor-default"
+                              : "bg-accent-blue hover:bg-blue-600 disabled:opacity-50 text-white"
+                          }`}
+                        >
+                          {isAdding ? (
+                            <span className="flex items-center gap-1">
+                              <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Đang thêm...
+                            </span>
+                          ) : isAdded ? (
+                            "Đã thêm ✓"
+                          ) : (
+                            "Yêu cầu đấu giá"
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

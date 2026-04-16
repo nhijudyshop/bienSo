@@ -1,47 +1,90 @@
 "use client";
 
-import { useState } from "react";
-import { VPA_URL } from "@/lib/constants";
+import { useState, useEffect } from "react";
+import { getComplaintTopics, createComplaint } from "@/lib/api";
 
-const TOPICS = [
-  "Đăng ký tài khoản",
-  "Xác minh tài khoản (eKYC/VNeID)",
-  "Đăng ký đấu giá",
-  "Thanh toán",
-  "Phòng đấu giá",
-  "Kết quả đấu giá",
-  "Hoàn tiền",
-  "Thủ tục sau đấu giá",
-  "Lỗi hệ thống",
-  "Khác",
-];
+interface Topic {
+  id: string;
+  name: string;
+}
 
 export default function TiepNhanYKienPage() {
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [topicsLoading, setTopicsLoading] = useState(true);
   const [formData, setFormData] = useState({
-    topic: "",
-    title: "",
-    content: "",
-    email: "",
+    topicId: "",
+    fullName: "",
     phone: "",
+    email: "",
+    content: "",
   });
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    getComplaintTopics()
+      .then((data) => setTopics(data as Topic[]))
+      .catch(() => setTopics([]))
+      .finally(() => setTopicsLoading(false));
+  }, []);
+
   function updateField(key: string, value: string) {
     setFormData((prev) => ({ ...prev, [key]: value }));
+    if (error) setError("");
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!formData.topic || !formData.title || !formData.content) {
-      setError("Vui lòng điền đầy đủ thông tin bắt buộc");
+    if (!formData.topicId) {
+      setError("Vui lòng chọn chủ đề");
+      return;
+    }
+    if (!formData.fullName.trim()) {
+      setError("Vui lòng nhập họ và tên");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setError("Vui lòng nhập số điện thoại");
+      return;
+    }
+    if (!formData.email.trim()) {
+      setError("Vui lòng nhập email");
+      return;
+    }
+    if (!formData.content.trim()) {
+      setError("Vui lòng nhập nội dung");
       return;
     }
 
-    // In production, this would call /web-api/user-bidding/complaint/create-customer-complaint
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      await createComplaint({
+        topicId: formData.topicId,
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        content: formData.content.trim(),
+      });
+      setSubmitted(true);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Có lỗi xảy ra";
+      if (message.includes("401")) {
+        setError("Chưa đăng nhập. Vui lòng đăng nhập để gửi ý kiến.");
+      } else {
+        setError(message);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function resetForm() {
+    setSubmitted(false);
+    setFormData({ topicId: "", fullName: "", phone: "", email: "", content: "" });
+    setError("");
   }
 
   if (submitted) {
@@ -49,19 +92,18 @@ export default function TiepNhanYKienPage() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="bg-bg-secondary rounded-xl border border-border p-12 text-center">
           <div className="w-16 h-16 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-accent-green text-2xl">✓</span>
+            <svg className="w-8 h-8 text-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          <h2 className="text-xl font-bold mb-2">Đã gửi thành công</h2>
+          <h2 className="text-xl font-bold text-text-primary mb-2">Gửi thành công</h2>
           <p className="text-text-secondary text-sm mb-6">
             Cảm ơn bạn đã gửi ý kiến. Chúng tôi sẽ xem xét và phản hồi trong thời gian sớm nhất.
           </p>
-          <p className="text-text-secondary text-xs mb-6">
-            Lưu ý: Để gửi khiếu nại chính thức, vui lòng sử dụng{" "}
-            <a href={`${VPA_URL}/tiep-nhan-y-kien`} target="_blank" rel="noopener noreferrer"
-              className="text-accent-blue underline">dgbs.vpa.com.vn</a>
-          </p>
-          <button onClick={() => { setSubmitted(false); setFormData({ topic: "", title: "", content: "", email: "", phone: "" }); }}
-            className="bg-accent-blue text-white px-4 py-2 rounded-lg text-sm">
+          <button
+            onClick={resetForm}
+            className="bg-accent-blue hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          >
             Gửi ý kiến khác
           </button>
         </div>
@@ -71,47 +113,82 @@ export default function TiepNhanYKienPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-center mb-2">TIẾP NHẬN Ý KIẾN</h1>
+      <h1 className="text-2xl font-bold text-text-primary text-center mb-2">
+        Tiếp nhận ý kiến
+      </h1>
       <p className="text-text-secondary text-center text-sm mb-8">
         Gửi khiếu nại, góp ý hoặc yêu cầu hỗ trợ
       </p>
 
-      <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-xl px-4 py-3 text-sm text-accent-blue mb-6">
-        Để gửi khiếu nại chính thức (có xác thực), vui lòng sử dụng{" "}
-        <a href={`${VPA_URL}/tiep-nhan-y-kien`} target="_blank" rel="noopener noreferrer"
-          className="underline font-medium">dgbs.vpa.com.vn</a>
-      </div>
-
-      <form onSubmit={handleSubmit} className="bg-bg-secondary rounded-xl border border-border p-6">
-        <div className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-bg-secondary rounded-xl border border-border p-6"
+      >
+        <div className="space-y-5">
           {/* Topic */}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1.5">
               Chủ đề <span className="text-accent-red">*</span>
             </label>
-            <select
-              value={formData.topic}
-              onChange={(e) => updateField("topic", e.target.value)}
-              className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
-            >
-              <option value="">Chọn chủ đề</option>
-              {TOPICS.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+            {topicsLoading ? (
+              <div className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm text-text-secondary">
+                Đang tải danh sách chủ đề...
+              </div>
+            ) : (
+              <select
+                value={formData.topicId}
+                onChange={(e) => updateField("topicId", e.target.value)}
+                className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-blue transition-colors"
+              >
+                <option value="">-- Chọn chủ đề --</option>
+                {topics.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          {/* Title */}
+          {/* Full name */}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1.5">
-              Tiêu đề <span className="text-accent-red">*</span>
+              Họ và tên <span className="text-accent-red">*</span>
             </label>
             <input
               type="text"
-              value={formData.title}
-              onChange={(e) => updateField("title", e.target.value)}
-              placeholder="Nhập tiêu đề"
-              className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
+              value={formData.fullName}
+              onChange={(e) => updateField("fullName", e.target.value)}
+              placeholder="Nhập họ và tên"
+              className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-blue transition-colors"
+            />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Số điện thoại <span className="text-accent-red">*</span>
+            </label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => updateField("phone", e.target.value)}
+              placeholder="0912345678"
+              className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-blue transition-colors"
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Email <span className="text-accent-red">*</span>
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => updateField("email", e.target.value)}
+              placeholder="email@example.com"
+              className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-blue transition-colors"
             />
           </div>
 
@@ -123,45 +200,45 @@ export default function TiepNhanYKienPage() {
             <textarea
               value={formData.content}
               onChange={(e) => updateField("content", e.target.value)}
-              placeholder="Mô tả chi tiết vấn đề của bạn"
+              placeholder="Mô tả chi tiết vấn đề của bạn..."
               rows={5}
-              className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue resize-none"
+              className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-blue resize-none transition-colors"
             />
           </div>
 
-          {/* Contact info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">Email liên hệ</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => updateField("email", e.target.value)}
-                placeholder="email@example.com"
-                className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">Số điện thoại</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
-                placeholder="0912345678"
-                className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
-              />
-            </div>
-          </div>
-
+          {/* Error */}
           {error && (
             <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
-              {error}
+              {error.includes("401") || error.includes("đăng nhập") ? (
+                <span>
+                  {error}{" "}
+                  <a href="/dang-nhap" className="underline font-medium">
+                    Đăng nhập ngay
+                  </a>
+                </span>
+              ) : (
+                error
+              )}
             </div>
           )}
 
-          <button type="submit"
-            className="w-full bg-accent-green hover:bg-green-600 text-white py-3 rounded-lg text-sm font-medium transition-colors">
-            Gửi ý kiến
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Đang gửi...
+              </>
+            ) : (
+              "Gửi ý kiến"
+            )}
           </button>
         </div>
       </form>

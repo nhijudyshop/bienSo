@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { AnnouncementPlan } from "@/types";
-import { getAnnouncementPlans, formatPrice } from "@/lib/api";
-import { VPA_URL } from "@/lib/constants";
+import { getAnnouncementPlans, formatPrice, addToCart } from "@/lib/api";
 import SearchFilters, { type SearchParams } from "@/components/SearchFilters";
 import PlateNumber from "@/components/PlateNumber";
 
@@ -13,6 +12,8 @@ export default function DanhSachBienPage() {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentFilters, setCurrentFilters] = useState<SearchParams | undefined>();
+  const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async (filters?: SearchParams, p = 0) => {
     setLoading(true);
@@ -46,6 +47,29 @@ export default function DanhSachBienPage() {
 
   function goToPage(p: number) {
     fetchData(currentFilters, p);
+  }
+
+  async function handleAddToCart(bksId: string) {
+    setAddingIds((prev) => new Set(prev).add(bksId));
+    try {
+      await addToCart(bksId);
+      setAddedIds((prev) => new Set(prev).add(bksId));
+      setTimeout(() => {
+        setAddedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(bksId);
+          return next;
+        });
+      }, 2000);
+    } catch {
+      // silently fail - user can retry
+    } finally {
+      setAddingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(bksId);
+        return next;
+      });
+    }
   }
 
   const totalPages = Math.ceil(total / 25);
@@ -83,26 +107,49 @@ export default function DanhSachBienPage() {
                   <td colSpan={7} className="px-4 py-12 text-center text-text-secondary">Không có dữ liệu</td>
                 </tr>
               ) : (
-                plates.map((item, idx) => (
-                  <tr key={item.bksId} className="border-b border-border hover:bg-bg-card transition-colors">
-                    <td className="px-4 py-3 text-sm">{page * 25 + idx + 1}</td>
-                    <td className="px-4 py-3">
-                      <PlateNumber plate={item.bks} colorCode={item.colorCode} />
-                    </td>
-                    <td className="px-4 py-3 text-sm">{item.announcementNumber}</td>
-                    <td className="px-4 py-3 text-sm text-center">
-                      {item.hideTotalRegistered ? "—" : item.totalRegisteringPeople}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-accent-orange">{formatPrice(item.startingPrice)}</td>
-                    <td className="px-4 py-3 text-sm">{item.provinceName}</td>
-                    <td className="px-4 py-3 text-center">
-                      <a href={`/dang-ky-dau-gia?bks=${item.bks}`}
-                        className="bg-accent-green hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block">
-                        Đăng ký đấu giá
-                      </a>
-                    </td>
-                  </tr>
-                ))
+                plates.map((item, idx) => {
+                  const isAdding = addingIds.has(item.bksId);
+                  const isAdded = addedIds.has(item.bksId);
+                  return (
+                    <tr key={item.bksId} className="border-b border-border hover:bg-bg-card transition-colors">
+                      <td className="px-4 py-3 text-sm">{page * 25 + idx + 1}</td>
+                      <td className="px-4 py-3">
+                        <PlateNumber plate={item.bks} colorCode={item.colorCode} />
+                      </td>
+                      <td className="px-4 py-3 text-sm">{item.announcementNumber}</td>
+                      <td className="px-4 py-3 text-sm text-center">
+                        {item.hideTotalRegistered ? "—" : item.totalRegisteringPeople}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-accent-orange">{formatPrice(item.startingPrice)}</td>
+                      <td className="px-4 py-3 text-sm">{item.provinceName}</td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => handleAddToCart(item.bksId)}
+                          disabled={isAdding || isAdded}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block ${
+                            isAdded
+                              ? "bg-gray-600 text-gray-300 cursor-default"
+                              : "bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white"
+                          }`}
+                        >
+                          {isAdding ? (
+                            <span className="flex items-center gap-1">
+                              <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Đang thêm...
+                            </span>
+                          ) : isAdded ? (
+                            "Đã thêm ✓"
+                          ) : (
+                            "Đăng ký đấu giá"
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

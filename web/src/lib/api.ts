@@ -11,8 +11,8 @@ import type {
 
 import fallbackData from "@/lib/fallback-data.json";
 
-const CF_PROXY = "https://vpa-proxy.nhijudyshop.workers.dev";
 const fallback = fallbackData as Record<string, unknown>;
+const IS_DEV = typeof window !== "undefined" && window.location.hostname === "localhost";
 
 function getFallback<T>(endpoint: string): T | null {
   if (fallback[endpoint]) return fallback[endpoint] as T;
@@ -23,22 +23,22 @@ function getFallback<T>(endpoint: string): T | null {
 }
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${CF_PROXY}?endpoint=${encodeURIComponent(endpoint)}`;
-  try {
-    const res = await fetch(url, {
-      ...options,
-      headers: { "Content-Type": "application/json", ...options?.headers },
-    });
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
-    const data = await res.json();
-    // Check if response is HTML (Cloudflare block page)
-    if (typeof data === "string" && data.includes("<!DOCTYPE")) throw new Error("Blocked");
-    return data;
-  } catch (err) {
-    const fb = getFallback<T>(endpoint);
-    if (fb) return fb;
-    throw err instanceof Error ? err : new Error(`No data for ${endpoint}`);
+  // Dev mode (localhost with proxy server): call local API proxy
+  if (IS_DEV) {
+    try {
+      const res = await fetch(`/api/proxy?endpoint=${encodeURIComponent(endpoint)}`, {
+        ...options,
+        headers: { "Content-Type": "application/json", ...options?.headers },
+      });
+      if (res.ok) return res.json();
+    } catch {}
   }
+
+  // Production (GitHub Pages): use bundled fallback data
+  // VPA Cloudflare blocks all non-browser requests, so proxy/direct calls won't work
+  const fb = getFallback<T>(endpoint);
+  if (fb) return fb;
+  throw new Error(`Không có dữ liệu cho ${endpoint}`);
 }
 
 async function poster<T>(endpoint: string, body: unknown): Promise<T> {

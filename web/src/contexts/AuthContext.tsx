@@ -12,7 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (params: { username?: string; password?: string; token?: string }) => Promise<{ success: boolean; error?: string; needsCaptcha?: boolean; hint?: string }>;
+  login: (params: { username?: string; password?: string; captcha?: string; token?: string }) => Promise<{ success: boolean; error?: string; needsCaptcha?: boolean }>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  const login = useCallback(async (params: { username?: string; password?: string; token?: string }) => {
+  const login = useCallback(async (params: { username?: string; password?: string; captcha?: string; token?: string }) => {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

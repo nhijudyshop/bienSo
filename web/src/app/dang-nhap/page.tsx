@@ -1,14 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { VPA_URL } from "@/lib/constants";
 
 const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+const RECAPTCHA_V2_SITEKEY = "6LdivZIpAAAAAMjGvwJU60ZjdyyZ-BVx7vW62DM-";
 
 type LoginMode = "password" | "token";
+
+declare global {
+  interface Window {
+    grecaptcha?: {
+      render: (container: string | HTMLElement, params: Record<string, unknown>) => number;
+      getResponse: (widgetId?: number) => string;
+      reset: (widgetId?: number) => void;
+      ready?: (cb: () => void) => void;
+    };
+    onRecaptchaLoad?: () => void;
+  }
+}
 
 export default function DangNhapPage() {
   const router = useRouter();
@@ -20,9 +33,58 @@ export default function DangNhapPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [needsCaptcha, setNeedsCaptcha] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaLoaded, setCaptchaLoaded] = useState(false);
+  const [captchaError, setCaptchaError] = useState(false);
+  const captchaRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<number | null>(null);
 
-  // Already logged in
+  const renderCaptcha = useCallback(() => {
+    if (!window.grecaptcha || !captchaRef.current || widgetIdRef.current !== null) return;
+    try {
+      widgetIdRef.current = window.grecaptcha.render(captchaRef.current, {
+        sitekey: RECAPTCHA_V2_SITEKEY,
+        callback: (token: string) => setCaptchaToken(token),
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaError(true),
+        theme: "dark",
+      });
+      setCaptchaLoaded(true);
+    } catch {
+      setCaptchaError(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user || mode !== "password") return;
+
+    // Load reCAPTCHA script
+    if (document.querySelector('script[src*="recaptcha/api.js"]')) {
+      if (window.grecaptcha) renderCaptcha();
+      return;
+    }
+
+    window.onRecaptchaLoad = () => renderCaptcha();
+
+    const script = document.createElement("script");
+    script.src = "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => setCaptchaError(true);
+    document.head.appendChild(script);
+
+    return () => {
+      window.onRecaptchaLoad = undefined;
+    };
+  }, [user, mode, renderCaptcha]);
+
+  // Re-render captcha when switching back to password mode
+  useEffect(() => {
+    if (mode === "password" && window.grecaptcha && captchaRef.current && widgetIdRef.current === null) {
+      renderCaptcha();
+    }
+  }, [mode, renderCaptcha]);
+
   if (user) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
@@ -34,9 +96,7 @@ export default function DangNhapPage() {
             <h2 className="text-xl font-bold mb-2">
               Xin chào, {user.fullName || user.phoneNumber || "bạn"}
             </h2>
-            <p className="text-text-secondary text-sm mb-6">
-              Bạn đã đăng nhập thành công
-            </p>
+            <p className="text-text-secondary text-sm mb-6">Bạn đã đăng nhập thành công</p>
             <Link
               href="/thong-tin/tai-khoan"
               className="inline-block bg-accent-green hover:bg-green-600 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors"
@@ -52,7 +112,6 @@ export default function DangNhapPage() {
   async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setNeedsCaptcha(false);
 
     if (!phone || !password) {
       setError("Vui lòng nhập đầy đủ thông tin");
@@ -66,16 +125,22 @@ export default function DangNhapPage() {
       setError("Mật khẩu phải từ 8-16 ký tự");
       return;
     }
+    if (!captchaToken) {
+      setError("Vui lòng xác nhận reCAPTCHA");
+      return;
+    }
 
     setLoading(true);
     try {
-      const result = await login({ username: phone, password });
+      const result = await login({ username: phone, password, captcha: captchaToken });
       if (result.success) {
         router.push("/thong-tin/tai-khoan");
       } else {
         setError(result.error || "Đăng nhập thất bại");
-        if (result.needsCaptcha) {
-          setNeedsCaptcha(true);
+        // Reset captcha after failed attempt
+        if (window.grecaptcha && widgetIdRef.current !== null) {
+          window.grecaptcha.reset(widgetIdRef.current);
+          setCaptchaToken("");
         }
       }
     } catch {
@@ -192,6 +257,30 @@ export default function DangNhapPage() {
                 </div>
               </div>
 
+              {/* reCAPTCHA */}
+              <div>
+                {captchaError ? (
+                  <div className="bg-accent-orange/10 border border-accent-orange/30 rounded-lg px-4 py-3 text-sm text-accent-orange">
+                    reCAPTCHA không tải được (do giới hạn domain). Hãy dùng tab{" "}
+                    <button
+                      type="button"
+                      onClick={() => { setMode("token"); setError(""); }}
+                      className="underline font-medium"
+                    >
+                      Token
+                    </button>{" "}
+                    để đăng nhập.
+                  </div>
+                ) : (
+                  <div className="flex justify-center">
+                    <div ref={captchaRef} />
+                    {!captchaLoaded && (
+                      <div className="text-text-secondary text-sm py-3">Đang tải reCAPTCHA...</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Error */}
               {error && (
                 <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
@@ -199,25 +288,10 @@ export default function DangNhapPage() {
                 </div>
               )}
 
-              {/* Captcha hint */}
-              {needsCaptcha && (
-                <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-lg px-4 py-3 text-sm text-accent-blue">
-                  VPA yêu cầu reCAPTCHA khi đăng nhập bằng mật khẩu. Hãy chuyển sang tab{" "}
-                  <button
-                    type="button"
-                    onClick={() => { setMode("token"); setError(""); setNeedsCaptcha(false); }}
-                    className="underline font-medium"
-                  >
-                    Token
-                  </button>{" "}
-                  để đăng nhập.
-                </div>
-              )}
-
               {/* Submit */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (!captchaToken && !captchaError)}
                 className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
               >
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}

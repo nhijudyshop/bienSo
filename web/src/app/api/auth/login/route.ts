@@ -3,14 +3,23 @@ import { NextRequest, NextResponse } from "next/server";
 const TARGET = process.env.API_TARGET || "https://dgbs.vpa.com.vn";
 const COOKIES = process.env.VPA_COOKIES || "";
 
+function setTokenCookie(res: NextResponse, token: string) {
+  res.cookies.set("vpa_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24,
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password, token } = body;
+    const { username, password, captcha, token } = body;
 
-    // Mode 1: Direct token paste (user provides JWT directly)
+    // Mode 1: Direct token paste
     if (token) {
-      // Validate token by calling get-profile
       try {
         const profileRes = await fetch(
           `${TARGET}/web-api/user-bidding/api/user/get-profile`,
@@ -29,17 +38,11 @@ export async function POST(request: NextRequest) {
             message: "Đăng nhập thành công",
             user: profileData.result ?? null,
           });
-          res.cookies.set("vpa_token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-            maxAge: 60 * 60 * 24, // 24 hours
-          });
+          setTokenCookie(res, token);
           return res;
         }
       } catch {
-        // Token validation failed, fall through to error
+        // fall through
       }
       return NextResponse.json(
         { success: false, error: "Token không hợp lệ hoặc đã hết hạn" },
@@ -47,10 +50,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mode 2: Username + Password login via VPA API
+    // Mode 2: Username + Password + Captcha
     if (!username || !password) {
       return NextResponse.json(
         { success: false, error: "Thiếu thông tin đăng nhập" },
+        { status: 400 }
+      );
+    }
+
+    if (!captcha) {
+      return NextResponse.json(
+        { success: false, error: "Vui lòng xác nhận reCAPTCHA", needsCaptcha: true },
         { status: 400 }
       );
     }
@@ -74,7 +84,7 @@ export async function POST(request: NextRequest) {
           password,
           rememberMe: true,
           firstTimeToken: "",
-          captcha: "",
+          captcha,
           version: "ver2",
         }),
       }
@@ -88,32 +98,14 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Đăng nhập thành công",
       });
-      res.cookies.set("vpa_token", jwt, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24,
-      });
+      setTokenCookie(res, jwt);
       return res;
     }
 
-    // API returned error - likely captcha required
-    const errorMsg =
-      data.message || data.error || "Đăng nhập thất bại";
-    const needsCaptcha =
-      errorMsg.toLowerCase().includes("captcha") ||
-      authRes.status === 400;
+    const errorMsg = data.message || data.error || "Đăng nhập thất bại";
 
     return NextResponse.json(
-      {
-        success: false,
-        error: errorMsg,
-        needsCaptcha,
-        hint: needsCaptcha
-          ? "VPA yêu cầu reCAPTCHA. Hãy dùng phương thức đăng nhập bằng token."
-          : undefined,
-      },
+      { success: false, error: errorMsg },
       { status: 401 }
     );
   } catch {

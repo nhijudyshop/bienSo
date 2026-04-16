@@ -1,89 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { VPA_URL } from "@/lib/constants";
 
-const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
-const RECAPTCHA_V2_SITEKEY = "6LdivZIpAAAAAMjGvwJU60ZjdyyZ-BVx7vW62DM-";
-
-type LoginMode = "password" | "token";
-
-declare global {
-  interface Window {
-    grecaptcha?: {
-      render: (container: string | HTMLElement, params: Record<string, unknown>) => number;
-      getResponse: (widgetId?: number) => string;
-      reset: (widgetId?: number) => void;
-      ready?: (cb: () => void) => void;
-    };
-    onRecaptchaLoad?: () => void;
-  }
-}
+// Bookmarklet: khi chạy trên dgbs.vpa.com.vn sẽ tìm token trong localStorage và copy
+const BOOKMARKLET_CODE = `javascript:void(function(){var t='';for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.length>100&&(k.toLowerCase().includes('token')||k.toLowerCase().includes('auth'))){t=v;break}}if(!t){alert('Không tìm thấy token. Hãy đăng nhập trước.')}else{navigator.clipboard.writeText(t).then(function(){alert('Đã copy token! Quay lại bien-so.vercel.app để dán.')}).catch(function(){prompt('Copy token bên dưới:',t)})}})()`;
 
 export default function DangNhapPage() {
   const router = useRouter();
   const { user, login } = useAuth();
-  const [mode, setMode] = useState<LoginMode>("password");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaLoaded, setCaptchaLoaded] = useState(false);
-  const [captchaError, setCaptchaError] = useState(false);
-  const captchaRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<number | null>(null);
-
-  const renderCaptcha = useCallback(() => {
-    if (!window.grecaptcha || !captchaRef.current || widgetIdRef.current !== null) return;
-    try {
-      widgetIdRef.current = window.grecaptcha.render(captchaRef.current, {
-        sitekey: RECAPTCHA_V2_SITEKEY,
-        callback: (token: string) => setCaptchaToken(token),
-        "expired-callback": () => setCaptchaToken(""),
-        "error-callback": () => setCaptchaError(true),
-        theme: "dark",
-      });
-      setCaptchaLoaded(true);
-    } catch {
-      setCaptchaError(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user || mode !== "password") return;
-
-    // Load reCAPTCHA script
-    if (document.querySelector('script[src*="recaptcha/api.js"]')) {
-      if (window.grecaptcha) renderCaptcha();
-      return;
-    }
-
-    window.onRecaptchaLoad = () => renderCaptcha();
-
-    const script = document.createElement("script");
-    script.src = "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit";
-    script.async = true;
-    script.defer = true;
-    script.onerror = () => setCaptchaError(true);
-    document.head.appendChild(script);
-
-    return () => {
-      window.onRecaptchaLoad = undefined;
-    };
-  }, [user, mode, renderCaptcha]);
-
-  // Re-render captcha when switching back to password mode
-  useEffect(() => {
-    if (mode === "password" && window.grecaptcha && captchaRef.current && widgetIdRef.current === null) {
-      renderCaptcha();
-    }
-  }, [mode, renderCaptcha]);
+  const [step, setStep] = useState<1 | 2>(1);
 
   if (user) {
     return (
@@ -109,54 +41,13 @@ export default function DangNhapPage() {
     );
   }
 
-  async function handlePasswordLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-
-    if (!phone || !password) {
-      setError("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-    if (!PHONE_REGEX.test(phone)) {
-      setError("Số điện thoại không hợp lệ (VD: 0912345678)");
-      return;
-    }
-    if (password.length < 8 || password.length > 16) {
-      setError("Mật khẩu phải từ 8-16 ký tự");
-      return;
-    }
-    if (!captchaToken && !captchaError) {
-      setError("Vui lòng xác nhận reCAPTCHA");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await login({ username: phone, password, captcha: captchaToken || "bypass" });
-      if (result.success) {
-        router.push("/thong-tin/tai-khoan");
-      } else {
-        setError(result.error || "Đăng nhập thất bại");
-        // Reset captcha after failed attempt
-        if (window.grecaptcha && widgetIdRef.current !== null) {
-          window.grecaptcha.reset(widgetIdRef.current);
-          setCaptchaToken("");
-        }
-      }
-    } catch {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleTokenLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
     const trimmed = token.trim();
     if (!trimmed) {
-      setError("Vui lòng nhập token");
+      setError("Vui lòng dán token");
       return;
     }
     if (trimmed.length < 50) {
@@ -184,7 +75,7 @@ export default function DangNhapPage() {
       <div className="w-full max-w-md">
         <div className="bg-bg-secondary rounded-2xl p-8 border border-border">
           {/* Logo */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="w-16 h-16 bg-accent-green rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-2xl">V</span>
             </div>
@@ -194,130 +85,95 @@ export default function DangNhapPage() {
             </p>
           </div>
 
-          {/* Mode tabs */}
-          <div className="flex rounded-lg bg-bg-card border border-border p-1 mb-6">
+          {/* Steps */}
+          <div className="flex items-center gap-2 mb-6">
             <button
-              onClick={() => { setMode("password"); setError(""); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                mode === "password"
-                  ? "bg-accent-green text-white"
-                  : "text-text-secondary hover:text-text-primary"
+              onClick={() => setStep(1)}
+              className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                step === 1 ? "bg-accent-green/20 text-accent-green" : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Mật khẩu
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                step === 1 ? "bg-accent-green text-white" : "bg-bg-card text-text-secondary"
+              }`}>1</span>
+              Đăng nhập VPA
             </button>
+            <svg className="w-4 h-4 text-text-secondary flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M9 5l7 7-7 7" />
+            </svg>
             <button
-              onClick={() => { setMode("token"); setError(""); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                mode === "token"
-                  ? "bg-accent-green text-white"
-                  : "text-text-secondary hover:text-text-primary"
+              onClick={() => setStep(2)}
+              className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                step === 2 ? "bg-accent-green/20 text-accent-green" : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Token
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                step === 2 ? "bg-accent-green text-white" : "bg-bg-card text-text-secondary"
+              }`}>2</span>
+              Dán token
             </button>
           </div>
 
-          {mode === "password" ? (
-            <form onSubmit={handlePasswordLogin} className="space-y-4">
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                  Số điện thoại
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Nhập số điện thoại"
-                  autoComplete="tel"
-                  className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
-                />
+          {step === 1 ? (
+            <div className="space-y-4">
+              <div className="bg-bg-card border border-border rounded-lg p-4 text-sm text-text-secondary space-y-3">
+                <p>
+                  Do VPA yêu cầu reCAPTCHA (giới hạn domain <code className="text-xs bg-bg-input px-1 py-0.5 rounded">dgbs.vpa.com.vn</code>),
+                  bạn cần đăng nhập trực tiếp trên VPA rồi lấy token.
+                </p>
               </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                  Mật khẩu
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu"
-                    autoComplete="current-password"
-                    className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm pr-12 focus:outline-none focus:border-accent-blue"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary text-sm"
-                  >
-                    {showPassword ? "Ẩn" : "Hiện"}
-                  </button>
-                </div>
-              </div>
-
-              {/* reCAPTCHA */}
-              <div>
-                {captchaError ? (
-                  <div className="bg-accent-orange/10 border border-accent-orange/30 rounded-lg px-4 py-3 text-sm text-accent-orange">
-                    reCAPTCHA không tải được (do giới hạn domain). Hãy dùng tab{" "}
-                    <button
-                      type="button"
-                      onClick={() => { setMode("token"); setError(""); }}
-                      className="underline font-medium"
-                    >
-                      Token
-                    </button>{" "}
-                    để đăng nhập.
-                  </div>
-                ) : (
-                  <div className="flex justify-center">
-                    <div ref={captchaRef} />
-                    {!captchaLoaded && (
-                      <div className="text-text-secondary text-sm py-3">Đang tải reCAPTCHA...</div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Error */}
-              {error && (
-                <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
-                  {error}
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
+              {/* Step 1: Open VPA */}
+              <a
+                href={`${VPA_URL}/dang-nhap`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-accent-green hover:bg-green-600 text-white py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >
-                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                </svg>
+                Mở trang đăng nhập VPA
+              </a>
+
+              {/* Step 2: Copy token */}
+              <div className="bg-bg-card border border-border rounded-lg p-4 text-sm space-y-3">
+                <p className="font-medium text-text-primary">Sau khi đăng nhập xong, lấy token bằng 1 trong 2 cách:</p>
+
+                <div className="space-y-2">
+                  <p className="text-text-secondary text-xs font-medium">Cách 1: Bookmarklet (nhanh nhất)</p>
+                  <p className="text-text-secondary text-xs">
+                    Kéo nút bên dưới vào thanh bookmark. Sau khi đăng nhập VPA, bấm bookmark để tự copy token:
+                  </p>
+                  <a
+                    href={BOOKMARKLET_CODE}
+                    onClick={(e) => e.preventDefault()}
+                    draggable
+                    className="inline-block bg-accent-blue/20 text-accent-blue px-3 py-1.5 rounded text-xs font-medium border border-accent-blue/30 cursor-grab"
+                  >
+                    📋 Copy VPA Token
+                  </a>
+                </div>
+
+                <div className="border-t border-border pt-3 space-y-1">
+                  <p className="text-text-secondary text-xs font-medium">Cách 2: DevTools</p>
+                  <ol className="text-text-secondary text-xs list-decimal list-inside space-y-0.5">
+                    <li>Mở DevTools (F12) trên trang VPA</li>
+                    <li>Tab <strong>Application</strong> &rarr; <strong>Local Storage</strong></li>
+                    <li>Tìm key chứa &quot;token&quot; &rarr; copy giá trị</li>
+                  </ol>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setStep(2)}
+                className="w-full bg-bg-card hover:bg-bg-input border border-border text-text-primary py-3 rounded-lg text-sm font-medium transition-colors"
+              >
+                Đã có token → Tiếp tục
               </button>
-            </form>
+            </div>
           ) : (
             <form onSubmit={handleTokenLogin} className="space-y-4">
-              {/* Token instructions */}
-              <div className="bg-bg-card border border-border rounded-lg p-4 text-sm text-text-secondary space-y-2">
-                <p className="font-medium text-text-primary">Hướng dẫn lấy token:</p>
-                <ol className="list-decimal list-inside space-y-1 text-xs">
-                  <li>
-                    Đăng nhập tại{" "}
-                    <a href={VPA_URL} target="_blank" rel="noopener noreferrer" className="text-accent-blue underline">
-                      dgbs.vpa.com.vn
-                    </a>
-                  </li>
-                  <li>Mở DevTools (F12) &rarr; tab Application</li>
-                  <li>Local Storage &rarr; tìm key chứa &quot;token&quot;</li>
-                  <li>Copy giá trị token và dán vào đây</li>
-                </ol>
-              </div>
-
-              {/* Token input */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">
                   JWT Token
@@ -327,44 +183,34 @@ export default function DangNhapPage() {
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="Dán JWT token tại đây..."
                   rows={4}
+                  autoFocus
                   className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue font-mono text-xs"
                 />
               </div>
 
-              {/* Error */}
               {error && (
                 <div className="bg-accent-red/10 border border-accent-red/30 rounded-lg px-4 py-3 text-sm text-accent-red">
                   {error}
                 </div>
               )}
 
-              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
               >
-                {loading ? "Đang xác thực..." : "Đăng nhập bằng token"}
+                {loading ? "Đang xác thực..." : "Đăng nhập"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full text-text-secondary hover:text-text-primary text-sm transition-colors"
+              >
+                ← Quay lại hướng dẫn
               </button>
             </form>
           )}
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-border"></div>
-            <span className="text-text-secondary text-xs">HOẶC</span>
-            <div className="flex-1 h-px bg-border"></div>
-          </div>
-
-          {/* VPA direct login */}
-          <a
-            href={`${VPA_URL}/dang-nhap`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-bg-card hover:bg-bg-input border border-border text-text-primary py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-          >
-            Đăng nhập trên dgbs.vpa.com.vn
-          </a>
 
           {/* Register link */}
           <p className="text-center text-sm text-text-secondary mt-6">

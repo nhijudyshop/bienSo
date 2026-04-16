@@ -4,12 +4,14 @@
   "version": "2.0",
   "description": "Proxy VPA API calls cho bien-so.vercel.app, bypass Cloudflare + CORS",
   "permissions": [
-    "declarativeNetRequest",
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "https://dgbs.vpa.com.vn/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://dgbs.vpa.com.vn/*"],
@@ -24,10 +26,16 @@
         "http://localhost:3001/*"
       ],
       "js": ["bridge.js"],
-      "run_at": "document_start",
-      "world": "MAIN"
+      "run_at": "document_start"
     }
   ],
+  "externally_connectable": {
+    "matches": [
+      "https://bien-so.vercel.app/*",
+      "http://localhost:3000/*",
+      "http://localhost:3001/*"
+    ]
+  },
   "declarative_net_request": {
     "rule_resources": [
       {

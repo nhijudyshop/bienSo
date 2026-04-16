@@ -99,7 +99,7 @@ export default function DangKyDauGiaPage() {
                       <td className="px-4 py-3 text-sm">{item.provinceName}</td>
                       <td className="px-4 py-3 text-sm text-right text-accent-orange">{formatPrice(item.startingPrice)}</td>
                       <td className="px-4 py-3 text-center">
-                        <a href={VPA_URL} target="_blank" rel="noopener noreferrer"
+                        <a href={`${VPA_URL}/dang-ky-dau-gia?bks=${item.bks}`} target="_blank" rel="noopener noreferrer"
                           className="bg-accent-green hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block">
                           Đăng ký đấu giá
                         </a>

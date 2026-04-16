@@ -104,7 +104,7 @@ export default function KhoBienSoPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <a
-                        href={VPA_URL}
+                        href={`${VPA_URL}/kho-bien-so?search=${item.licensePlate}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-accent-blue hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block"

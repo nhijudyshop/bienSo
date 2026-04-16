@@ -1,0 +1,202 @@
+[
+  {
+    "stt": "1",
+    "bienSo": "29E-555.55",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "1",
+    "tinhThanhPho": "Thành phố Hà Nội",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "2",
+    "bienSo": "30B-555.55 (Đấu lại lần 2)",
+    "phienDau": "Phiên 7",
+    "soNguoiDangKy": "2",
+    "tinhThanhPho": "Thành phố Hà Nội",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "3",
+    "bienSo": "30D-333.33",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hà Nội",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "4",
+    "bienSo": "30D-444.44",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hà Nội",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "5",
+    "bienSo": "30D-555.55",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hà Nội",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "6",
+    "bienSo": "30D-666.66",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hà Nội",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "7",
+    "bienSo": "30D-777.77",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "1",
+    "tinhThanhPho": "Thành phố Hà Nội",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "8",
+    "bienSo": "50E-555.55",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "9",
+    "bienSo": "50H-555.55 (Đấu lại lần 2)",
+    "phienDau": "Phiên 6",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "10",
+    "bienSo": "50H-666.66 (Đấu lại lần 2)",
+    "phienDau": "Phiên 6",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "11",
+    "bienSo": "51P-888.88",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "12",
+    "bienSo": "51P-999.99",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "13",
+    "bienSo": "51S-111.11",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "1",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "14",
+    "bienSo": "51S-222.22",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "15",
+    "bienSo": "51S-333.33",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "16",
+    "bienSo": "51S-444.44",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hồ Chí Minh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "17",
+    "bienSo": "43B-666.66",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "2",
+    "tinhThanhPho": "Thành phố Đà Nẵng",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "18",
+    "bienSo": "15B-555.55",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "1",
+    "tinhThanhPho": "Thành phố Hải Phòng",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "19",
+    "bienSo": "15B-666.66",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "1",
+    "tinhThanhPho": "Thành phố Hải Phòng",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "20",
+    "bienSo": "15K-777.77 (Đấu lại lần 2)",
+    "phienDau": "Phiên 7",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Thành phố Hải Phòng",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "21",
+    "bienSo": "15K-999.99 (Đấu lại lần 2)",
+    "phienDau": "Phiên 8",
+    "soNguoiDangKy": "1",
+    "tinhThanhPho": "Thành phố Hải Phòng",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "22",
+    "bienSo": "68A-777.77",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "2",
+    "tinhThanhPho": "Tỉnh An Giang",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "23",
+    "bienSo": "99A-999.99 (Đấu lại lần 2)",
+    "phienDau": "Phiên 7",
+    "soNguoiDangKy": "3",
+    "tinhThanhPho": "Tỉnh Bắc Ninh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "24",
+    "bienSo": "99B-666.66",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Tỉnh Bắc Ninh",
+    "ngayDauGia": ""
+  },
+  {
+    "stt": "25",
+    "bienSo": "99B-777.77",
+    "phienDau": "Phiên 10",
+    "soNguoiDangKy": "0",
+    "tinhThanhPho": "Tỉnh Bắc Ninh",
+    "ngayDauGia": ""
+  }
+]

@@ -82,33 +82,37 @@ localStorage.setItem = function (key, value) {
 };
 
 // === Token handler ===
-function onToken(token, source) {
+async function onToken(token, source) {
   if (foundToken === token) return;
   foundToken = token;
   console.log(`[VPA Helper] ✅ Token found via ${source} (${token.length} chars)`);
   showButton();
 
-  // Sync data from VPA to bien-so (runs in browser = bypasses Cloudflare)
-  syncData(token);
-
-  // Auto-send if opened from popup
   if (window.opener) {
-    sendToken(token, true);
+    // Send token first so parent page knows we're logged in
+    try { window.opener.postMessage({ type: "VPA_TOKEN", token }, "*"); } catch {}
+
+    // Sync data BEFORE closing (parent caches it in sessionStorage)
+    await syncData(token);
+
+    // Now close
+    updateBtn("✅ Đã gửi token + data!", "#16a34a");
+    setTimeout(() => window.close(), 500);
   }
 }
 
 // === Send token ===
-function sendToken(token, autoMode) {
+function sendToken(token) {
   if (window.opener) {
     try { window.opener.postMessage({ type: "VPA_TOKEN", token }, "*"); } catch {}
   }
   navigator.clipboard.writeText(token).catch(() => {});
-
   updateBtn("✅ Đã gửi token!", "#16a34a");
 
-  if (window.opener) {
-    setTimeout(() => window.close(), autoMode ? 500 : 800);
-  }
+  // Manual button click - sync + close
+  syncData(token).then(() => {
+    if (window.opener) setTimeout(() => window.close(), 500);
+  });
 }
 
 // === UI ===
@@ -136,7 +140,7 @@ function showButton() {
   document.getElementById("__vpa_btn").onclick = () => {
     const t = foundToken || scanLS();
     if (!t) { updateBtn("❌ Chưa có token!", "#ef4444"); setTimeout(() => updateBtn("🔑 Gửi token về bien-so", null), 2000); return; }
-    sendToken(t, false);
+    sendToken(t);
   };
 }
 

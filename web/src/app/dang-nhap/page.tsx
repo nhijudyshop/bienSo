@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { VPA_URL } from "@/lib/constants";
 
-// Bookmarklet: chạy trên VPA → đọc token → postMessage về opener → đóng popup
-const BOOKMARKLET_CODE = `javascript:void(function(){var t='';for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.length>100&&(k.toLowerCase().includes('token')||k.toLowerCase().includes('auth'))){t=v;break}}if(!t){alert('Không tìm thấy token. Hãy đăng nhập trước.')}else if(window.opener){window.opener.postMessage({type:'VPA_TOKEN',token:t},'*');window.close()}else{navigator.clipboard.writeText(t).then(function(){alert('Đã copy token!')}).catch(function(){prompt('Copy token:',t)})}})()`;
+// Bookmarklet: chạy trên VPA → đọc token → postMessage về opener + copy clipboard → đóng popup
+const BOOKMARKLET_CODE = `javascript:void(function(){var t='';for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.length>100&&(k.toLowerCase().includes('token')||k.toLowerCase().includes('auth'))){t=v;break}}if(!t){alert('Không tìm thấy token. Hãy đăng nhập trước.')}else{navigator.clipboard.writeText(t).catch(function(){});if(window.opener){try{window.opener.postMessage({type:'VPA_TOKEN',token:t},'*')}catch(e){}}window.close()}})()`;
 
 type PageState = "idle" | "waiting" | "token";
 
@@ -74,13 +74,21 @@ export default function DangNhapPage() {
       setState("waiting");
 
       // Poll to detect popup closed
-      pollRef.current = setInterval(() => {
+      pollRef.current = setInterval(async () => {
         if (popup.closed) {
           if (pollRef.current) clearInterval(pollRef.current);
-          // If no token received yet, switch to manual paste
-          if (!token) {
-            setState("token");
+          // Try reading token from clipboard (bookmarklet copies it)
+          try {
+            const clip = await navigator.clipboard.readText();
+            if (clip && clip.length > 100 && clip.startsWith("ey")) {
+              // Looks like a JWT token
+              submitToken(clip);
+              return;
+            }
+          } catch {
+            // Clipboard permission denied - fallback to manual
           }
+          setState("token");
         }
       }, 500);
     } else {
@@ -191,13 +199,10 @@ export default function DangNhapPage() {
 
               {/* Instructions */}
               <div className="bg-bg-card border border-border rounded-lg p-4 text-left text-xs text-text-secondary space-y-2">
-                <p className="font-medium text-text-primary">Sau khi đăng nhập xong:</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>Bấm bookmark <strong>&quot;🔑 Lấy VPA Token&quot;</strong> trên thanh bookmark</li>
-                  <li>Token sẽ tự động chuyển về đây</li>
-                </ol>
+                <p className="font-medium text-text-primary">Sau khi đăng nhập VPA xong:</p>
+                <p>Bấm bookmark <strong>&quot;🔑 Lấy VPA Token&quot;</strong> trên thanh bookmark → popup tự đóng → trang này tự đăng nhập.</p>
                 <div className="border-t border-border pt-2 mt-2">
-                  <p className="text-text-secondary">Hoặc mở Console (F12) trên popup VPA và chạy:</p>
+                  <p className="text-text-secondary">Nếu chưa có bookmarklet, mở Console (F12) trên popup VPA và chạy:</p>
                   <code className="block bg-bg-input p-2 rounded text-[10px] mt-1 break-all select-all">
                     {`window.opener.postMessage({type:'VPA_TOKEN',token:Object.values(localStorage).find(v=>v.length>100)},'*');close()`}
                   </code>

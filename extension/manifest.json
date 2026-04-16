@@ -7,8 +7,9 @@
   "content_scripts": [
     {
       "matches": ["https://dgbs.vpa.com.vn/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+      "js": ["inject.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ],
   "icons": {

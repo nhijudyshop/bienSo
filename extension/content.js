@@ -1,152 +1,222 @@
 /**
  * VPA Token Helper - Content Script
  * Chạy trên dgbs.vpa.com.vn
- * - Detect khi user đã đăng nhập (token có trong localStorage)
- * - Hiện nút "Gửi token" floating
- * - Bấm → postMessage token về window.opener (bien-so.vercel.app) → tự đóng
+ *
+ * 3 cách bắt token:
+ * 1. Intercept fetch/XHR responses từ /authenticate
+ * 2. Intercept request headers có Authorization: Bearer
+ * 3. Scan localStorage (key chứa token, hoặc JSON value chứa token)
  */
 
-const ALLOWED_ORIGINS = [
-  "https://bien-so.vercel.app",
-  "http://localhost:3000",
-];
+let foundToken = null;
 
-function findToken() {
+// === 1. Intercept fetch() ===
+const origFetch = window.fetch;
+window.fetch = async function (...args) {
+  const res = await origFetch.apply(this, args);
+  const url = typeof args[0] === "string" ? args[0] : args[0]?.url || "";
+
+  // Bắt token từ authenticate response
+  if (url.includes("/authenticate") && !url.includes("refresh")) {
+    try {
+      const clone = res.clone();
+      const data = await clone.json();
+      const token = data?.result?.token || data?.token;
+      if (token && token.length > 50) {
+        onTokenFound(token, "fetch /authenticate");
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  return res;
+};
+
+// === 2. Intercept XMLHttpRequest ===
+const origXhrOpen = XMLHttpRequest.prototype.open;
+const origXhrSend = XMLHttpRequest.prototype.send;
+const origXhrSetHeader = XMLHttpRequest.prototype.setRequestHeader;
+
+XMLHttpRequest.prototype.open = function (method, url) {
+  this._url = url;
+  this._headers = {};
+  return origXhrOpen.apply(this, arguments);
+};
+
+XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+  this._headers[name.toLowerCase()] = value;
+  // Bắt token từ Authorization header
+  if (name.toLowerCase() === "authorization" && value.startsWith("Bearer ")) {
+    const token = value.replace("Bearer ", "");
+    if (token.length > 50) {
+      onTokenFound(token, "XHR Authorization header");
+    }
+  }
+  return origXhrSetHeader.apply(this, arguments);
+};
+
+XMLHttpRequest.prototype.send = function () {
+  this.addEventListener("load", function () {
+    if (this._url && this._url.includes("/authenticate") && !this._url.includes("refresh")) {
+      try {
+        const data = JSON.parse(this.responseText);
+        const token = data?.result?.token || data?.token;
+        if (token && token.length > 50) {
+          onTokenFound(token, "XHR /authenticate");
+        }
+      } catch (e) { /* ignore */ }
+    }
+  });
+  return origXhrSend.apply(this, arguments);
+};
+
+// === 3. Scan localStorage ===
+function scanLocalStorage() {
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     const val = localStorage.getItem(key);
-    if (val && val.length > 100 && (key.toLowerCase().includes("token") || key.toLowerCase().includes("auth"))) {
+    if (!val) continue;
+
+    // Direct match: key chứa token/auth và value dài
+    if (val.length > 100 && /token|auth|jwt/i.test(key)) {
       return val;
     }
+
+    // JSON nested: parse và tìm token bên trong
+    try {
+      const parsed = JSON.parse(val);
+      const nested =
+        parsed?.token || parsed?.accessToken || parsed?.access_token ||
+        parsed?.result?.token || parsed?.id_token || parsed?.jwtToken;
+      if (nested && nested.length > 50) {
+        return nested;
+      }
+    } catch { /* not JSON */ }
   }
   return null;
 }
 
-function createButton() {
-  // Avoid duplicate
-  if (document.getElementById("vpa-token-btn")) return;
+// === Token found handler ===
+function onTokenFound(token, source) {
+  if (foundToken === token) return; // đã tìm thấy rồi
+  foundToken = token;
+  console.log(`[VPA Helper] Token found via ${source}`);
+  showButton();
 
-  const btn = document.createElement("div");
-  btn.id = "vpa-token-btn";
-  btn.innerHTML = `
-    <button id="vpa-send-token" style="
-      background: #22c55e;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
-      transition: all 0.2s;
-    ">
-      🔑 Gửi token về bien-so
-    </button>
+  // Auto-send nếu mở từ popup bien-so
+  if (window.opener) {
+    sendToken(token);
+  }
+}
+
+// === UI: Floating button ===
+function showButton() {
+  if (document.getElementById("vpa-token-helper")) return;
+
+  const container = document.createElement("div");
+  container.id = "vpa-token-helper";
+  container.innerHTML = `
+    <style>
+      #vpa-token-helper-btn {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 24px rgba(34, 197, 94, 0.5);
+        transition: all 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      #vpa-token-helper-btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.6);
+      }
+      #vpa-token-helper-btn:active {
+        transform: scale(0.98);
+      }
+      #vpa-token-helper-pulse {
+        animation: vpa-pulse 2s infinite;
+      }
+      @keyframes vpa-pulse {
+        0%, 100% { box-shadow: 0 4px 24px rgba(34, 197, 94, 0.5); }
+        50% { box-shadow: 0 4px 32px rgba(34, 197, 94, 0.8); }
+      }
+    </style>
+    <div id="vpa-token-helper-pulse" style="position:fixed;bottom:24px;right:24px;z-index:999999;">
+      <button id="vpa-token-helper-btn">
+        🔑 Gửi token về bien-so
+      </button>
+    </div>
   `;
-  btn.style.cssText = `
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 999999;
-  `;
-  document.body.appendChild(btn);
+  document.body.appendChild(container);
 
-  const sendBtn = document.getElementById("vpa-send-token");
-  sendBtn.addEventListener("mouseenter", () => {
-    sendBtn.style.transform = "scale(1.05)";
-    sendBtn.style.boxShadow = "0 6px 24px rgba(34, 197, 94, 0.5)";
-  });
-  sendBtn.addEventListener("mouseleave", () => {
-    sendBtn.style.transform = "scale(1)";
-    sendBtn.style.boxShadow = "0 4px 20px rgba(34, 197, 94, 0.4)";
-  });
-
-  sendBtn.addEventListener("click", () => {
-    const token = findToken();
+  document.getElementById("vpa-token-helper-btn").addEventListener("click", () => {
+    const token = foundToken || scanLocalStorage();
     if (!token) {
-      sendBtn.textContent = "❌ Chưa tìm thấy token";
-      sendBtn.style.background = "#ef4444";
-      setTimeout(() => {
-        sendBtn.innerHTML = "🔑 Gửi token về bien-so";
-        sendBtn.style.background = "#22c55e";
-      }, 2000);
+      updateButton("❌ Không tìm thấy token!", "#ef4444", false);
+      setTimeout(() => updateButton("🔑 Gửi token về bien-so", null, true), 2000);
       return;
     }
-
-    // Send via postMessage to opener (popup flow)
-    if (window.opener) {
-      try {
-        window.opener.postMessage({ type: "VPA_TOKEN", token }, "*");
-      } catch (e) { /* ignore */ }
-    }
-
-    // Also copy to clipboard
-    navigator.clipboard.writeText(token).catch(() => {});
-
-    // Show success
-    sendBtn.innerHTML = "✓ Đã gửi token!";
-    sendBtn.style.background = "#16a34a";
-
-    // Close popup after short delay
-    setTimeout(() => {
-      if (window.opener) {
-        window.close();
-      }
-    }, 800);
+    sendToken(token);
   });
 }
 
-function removeButton() {
-  const btn = document.getElementById("vpa-token-btn");
-  if (btn) btn.remove();
-}
-
-// Check periodically for token (user might just finished logging in)
-function checkAndShow() {
-  const token = findToken();
-  if (token) {
-    createButton();
-
-    // Auto-send if opened from bien-so popup
-    if (window.opener) {
-      // Auto-send after a short delay to let user see the button
-      // Only auto-send if not on login page (meaning login just completed)
-      if (!window.location.pathname.includes("dang-nhap") && !window.location.pathname.includes("dang-ky")) {
-        setTimeout(() => {
-          try {
-            window.opener.postMessage({ type: "VPA_TOKEN", token }, "*");
-            navigator.clipboard.writeText(token).catch(() => {});
-            const sendBtn = document.getElementById("vpa-send-token");
-            if (sendBtn) {
-              sendBtn.innerHTML = "✓ Token đã gửi tự động!";
-              sendBtn.style.background = "#16a34a";
-            }
-            setTimeout(() => window.close(), 1000);
-          } catch (e) { /* ignore */ }
-        }, 1500);
-      }
-    }
-  } else {
-    removeButton();
+function updateButton(text, bgColor, pulse) {
+  const btn = document.getElementById("vpa-token-helper-btn");
+  const pulseEl = document.getElementById("vpa-token-helper-pulse");
+  if (btn) {
+    btn.textContent = text;
+    if (bgColor) btn.style.background = bgColor;
+  }
+  if (pulseEl) {
+    pulseEl.style.animation = pulse ? "vpa-pulse 2s infinite" : "none";
   }
 }
 
-// Initial check
-checkAndShow();
+function sendToken(token) {
+  // postMessage to opener
+  if (window.opener) {
+    try {
+      window.opener.postMessage({ type: "VPA_TOKEN", token }, "*");
+    } catch (e) { /* ignore */ }
+  }
 
-// Re-check when page navigates (SPA)
+  // Copy to clipboard
+  navigator.clipboard.writeText(token).catch(() => {});
+
+  // Update UI
+  updateButton("✅ Đã gửi token!", "#16a34a", false);
+
+  // Close popup
+  setTimeout(() => {
+    if (window.opener) window.close();
+  }, 800);
+}
+
+// === Monitor: check periodically ===
+function monitor() {
+  if (foundToken) return; // đã có rồi
+
+  const lsToken = scanLocalStorage();
+  if (lsToken) {
+    onTokenFound(lsToken, "localStorage scan");
+  }
+}
+
+// Run monitor
+monitor();
+setInterval(monitor, 2000);
+
+// Watch SPA navigation
 let lastUrl = location.href;
-const observer = new MutationObserver(() => {
+new MutationObserver(() => {
   if (location.href !== lastUrl) {
     lastUrl = location.href;
-    setTimeout(checkAndShow, 1000);
+    setTimeout(monitor, 1500);
   }
-});
-observer.observe(document.body, { childList: true, subtree: true });
-
-// Also check periodically (token might appear after API response)
-setInterval(checkAndShow, 3000);
+}).observe(document.documentElement, { childList: true, subtree: true });

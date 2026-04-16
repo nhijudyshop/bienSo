@@ -10,6 +10,30 @@ function getJwtToken(request: NextRequest): string {
   return request.cookies.get("vpa_token")?.value || ENV_JWT_TOKEN;
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+    return payload;
+  } catch { return null; }
+}
+
+function buildProfileFromJwt(token: string) {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+  return {
+    success: true,
+    result: {
+      username: payload.sub,
+      phone: payload.sub,
+      userId: payload.userId,
+      roles: payload.roles,
+      fullname: payload.sub,
+    },
+  };
+}
+
 const fallback = fallbackData as Record<string, unknown>;
 
 const ALLOWED_ENDPOINTS = [
@@ -124,6 +148,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!res.ok) {
+      // If authenticated endpoint failed, try JWT decode fallback for profile
+      if (needsAuth(endpoint) && jwtToken && endpoint.includes("get-profile")) {
+        const profile = buildProfileFromJwt(jwtToken);
+        if (profile) return NextResponse.json(profile);
+      }
       const fb = getFallback(endpoint);
       if (fb) return NextResponse.json(fb);
       return NextResponse.json({ error: `Upstream ${res.status}` }, { status: res.status });
@@ -132,6 +161,11 @@ export async function GET(request: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data);
   } catch {
+    // Network error - try JWT fallback for profile
+    if (needsAuth(endpoint) && jwtToken && endpoint.includes("get-profile")) {
+      const profile = buildProfileFromJwt(jwtToken);
+      if (profile) return NextResponse.json(profile);
+    }
     const fb = getFallback(endpoint);
     if (fb) return NextResponse.json(fb);
     return NextResponse.json({ error: "Proxy fetch failed" }, { status: 502 });

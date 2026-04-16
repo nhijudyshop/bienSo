@@ -18,36 +18,45 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { username, password, captcha, token } = body;
 
-    // Mode 1: Direct token paste
+    // Mode 1: Direct token paste - trust JWT from extension/manual paste
     if (token) {
+      const trimmed = token.trim();
+      // Basic JWT format check (3 base64 parts separated by dots)
+      if (trimmed.length < 50 || trimmed.split(".").length !== 3) {
+        return NextResponse.json(
+          { success: false, error: "Token không đúng định dạng JWT" },
+          { status: 400 }
+        );
+      }
+
+      // Try to validate with VPA (may fail due to Cloudflare)
+      let user = null;
       try {
         const profileRes = await fetch(
           `${TARGET}/web-api/user-bidding/api/user/get-profile`,
           {
             headers: {
               Accept: "application/json",
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${trimmed}`,
               ...(COOKIES ? { Cookie: COOKIES } : {}),
             },
           }
         );
         if (profileRes.ok) {
           const profileData = await profileRes.json();
-          const res = NextResponse.json({
-            success: true,
-            message: "Đăng nhập thành công",
-            user: profileData.result ?? null,
-          });
-          setTokenCookie(res, token);
-          return res;
+          user = profileData.result ?? null;
         }
       } catch {
-        // fall through
+        // Cloudflare blocked - still accept token
       }
-      return NextResponse.json(
-        { success: false, error: "Token không hợp lệ hoặc đã hết hạn" },
-        { status: 401 }
-      );
+
+      const res = NextResponse.json({
+        success: true,
+        message: "Đăng nhập thành công",
+        user,
+      });
+      setTokenCookie(res, trimmed);
+      return res;
     }
 
     // Mode 2: Username + Password + Captcha

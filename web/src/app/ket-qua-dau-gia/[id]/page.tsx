@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getAuctionResultDetail, formatPrice } from "@/lib/api";
 import { VPA_URL } from "@/lib/constants";
@@ -16,14 +15,14 @@ interface ResultDetail {
   colorCode?: number;
 }
 
-function KetQuaChiTietContent() {
-  const searchParams = useSearchParams();
-  const id = Number(searchParams.get("id"));
+export default function KetQuaChiTietPage() {
+  const params = useParams();
+  const id = Number(params.id);
   const [details, setDetails] = useState<ResultDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) { setLoading(false); return; }
+    if (!id) return;
     getAuctionResultDetail(id)
       .then((data: unknown) => {
         const d = data as { content?: ResultDetail[] };
@@ -98,8 +97,4 @@ function KetQuaChiTietContent() {
       <div className="text-center text-text-secondary text-sm mt-4">{details.length} biển số</div>
     </div>
   );
-}
-
-export default function KetQuaChiTietPage() {
-  return <Suspense fallback={<div className="text-center py-12 text-text-secondary">Đang tải dữ liệu...</div>}><KetQuaChiTietContent /></Suspense>;
 }

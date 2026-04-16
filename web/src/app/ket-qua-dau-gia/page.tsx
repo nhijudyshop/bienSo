@@ -84,7 +84,7 @@ export default function KetQuaDauGiaPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <Link
-                        href={`/ket-qua-dau-gia/chi-tiet?id=${item.id}`}
+                        href={`/ket-qua-dau-gia/${item.id}`}
                         className="text-accent-blue hover:underline text-sm"
                       >
                         Xem chi tiết

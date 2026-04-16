@@ -9,36 +9,15 @@ import type {
   PaginatedResponse,
 } from "@/types";
 
-import fallbackData from "@/lib/fallback-data.json";
-
-const fallback = fallbackData as Record<string, unknown>;
-const IS_DEV = typeof window !== "undefined" && window.location.hostname === "localhost";
-
-function getFallback<T>(endpoint: string): T | null {
-  if (fallback[endpoint]) return fallback[endpoint] as T;
-  for (const key of Object.keys(fallback)) {
-    if (endpoint.includes(key) || key.includes(endpoint)) return fallback[key] as T;
-  }
-  return null;
-}
+const BASE = "/api/proxy";
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  // Dev mode (localhost with proxy server): call local API proxy
-  if (IS_DEV) {
-    try {
-      const res = await fetch(`/api/proxy?endpoint=${encodeURIComponent(endpoint)}`, {
-        ...options,
-        headers: { "Content-Type": "application/json", ...options?.headers },
-      });
-      if (res.ok) return res.json();
-    } catch {}
-  }
-
-  // Production (GitHub Pages): use bundled fallback data
-  // VPA Cloudflare blocks all non-browser requests, so proxy/direct calls won't work
-  const fb = getFallback<T>(endpoint);
-  if (fb) return fb;
-  throw new Error(`Không có dữ liệu cho ${endpoint}`);
+  const res = await fetch(`${BASE}?endpoint=${encodeURIComponent(endpoint)}`, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...options?.headers },
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
 }
 
 async function poster<T>(endpoint: string, body: unknown): Promise<T> {

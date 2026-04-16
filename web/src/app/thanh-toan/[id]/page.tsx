@@ -1,7 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { VPA_URL } from "@/lib/constants";
 
@@ -10,9 +9,9 @@ const BANKS = [
   "Agribank", "MB Bank", "VIB", "OCB", "Vietcombank",
 ];
 
-function ThanhToanContent() {
-  const searchParams = useSearchParams();
-  const orderId = searchParams.get("id") ?? "";
+export default function ThanhToanPage() {
+  const params = useParams();
+  const orderId = params.id as string;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
@@ -23,11 +22,9 @@ function ThanhToanContent() {
       </div>
 
       <h1 className="text-2xl font-bold text-center mb-2">THANH TOÁN</h1>
-      {orderId && (
-        <p className="text-text-secondary text-center text-sm mb-8">
-          Mã đơn hàng: <span className="font-mono text-text-primary">{orderId}</span>
-        </p>
-      )}
+      <p className="text-text-secondary text-center text-sm mb-8">
+        Mã đơn hàng: <span className="font-mono text-text-primary">{orderId}</span>
+      </p>
 
       <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-xl px-5 py-4 text-sm text-accent-blue mb-6">
         Thanh toán yêu cầu xác thực bảo mật (QR Code, OTP). Vui lòng thanh toán trực tiếp tại{" "}
@@ -73,8 +70,4 @@ function ThanhToanContent() {
       </div>
     </div>
   );
-}
-
-export default function ThanhToanPage() {
-  return <Suspense fallback={<div className="text-center py-12 text-text-secondary">Đang tải dữ liệu...</div>}><ThanhToanContent /></Suspense>;
 }

@@ -27,6 +27,17 @@ const ALLOWED_ENDPOINTS = [
   "/web-api/user-bidding/api/publish/get-all-publish-detail",
   "/web-api/user-bidding/api/publish/get-current-publish",
   "/web-api/user-bidding/api/publish/get-current-register",
+  "/web-api/user-bidding/api/user/get-profile",
+  "/web-api/user-bidding/api/user/get-information-account",
+  "/web-api/user-bidding/api/order/get-orders-payment-status",
+  "/web-api/user-bidding/api/order/get-orders-wait-auction",
+  "/web-api/user-bidding/api/order/get-orders-wait-auction-count",
+  "/web-api/user-bidding/api/notification/get-all-user-notification",
+  "/web-api/user-bidding/api/notification/get-unread-count",
+  "/web-api/user-bidding/api/user/auction-result/get-history-and-result",
+  "/web-api/user-bidding/api/document/v2/user/all",
+  "/web-api/user-bidding/api/cart/get-all-items",
+  "/web-api/user-bidding/api/wishlist/get-all-items",
 ];
 
 function corsHeaders(origin) {

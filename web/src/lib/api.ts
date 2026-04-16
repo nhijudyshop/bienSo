@@ -34,10 +34,10 @@ async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
     // Check if response is HTML (Cloudflare block page)
     if (typeof data === "string" && data.includes("<!DOCTYPE")) throw new Error("Blocked");
     return data;
-  } catch {
+  } catch (err) {
     const fb = getFallback<T>(endpoint);
     if (fb) return fb;
-    throw new Error(`No data for ${endpoint}`);
+    throw err instanceof Error ? err : new Error(`No data for ${endpoint}`);
   }
 }
 

@@ -116,6 +116,95 @@ export async function getServerTime(): Promise<number> {
   return fetcher<number>("/web-api/time-control/public/time-info");
 }
 
+// --- Authenticated APIs ---
+
+export async function getUserProfile(): Promise<unknown> {
+  const data = await fetcher<{ success: boolean; result: unknown }>(
+    "/web-api/user-bidding/api/user/get-profile"
+  );
+  return data.result;
+}
+
+export async function getCartItems(): Promise<unknown[]> {
+  const data = await fetcher<{ success: boolean; result: unknown[] }>(
+    "/web-api/user-bidding/api/cart/get-all-items"
+  );
+  return data.result ?? [];
+}
+
+export async function getCartCount(): Promise<number> {
+  const data = await fetcher<{ success: boolean; result: number }>(
+    "/web-api/user-bidding/api/cart/get-items-count"
+  );
+  return data.result ?? 0;
+}
+
+export async function getWishlistItems(): Promise<unknown[]> {
+  const data = await fetcher<{ success: boolean; result: unknown[] }>(
+    "/web-api/user-bidding/api/wishlist/get-all-items"
+  );
+  return data.result ?? [];
+}
+
+export async function getOrdersPaymentStatus(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/order/get-orders-payment-status");
+}
+
+export async function getOrdersWaitAuction(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/order/get-orders-wait-auction");
+}
+
+export async function getAuctionHistory(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/user/auction-result/get-history-and-result");
+}
+
+export async function getNotifications(): Promise<unknown[]> {
+  const data = await fetcher<{ success: boolean; result: { content: unknown[] } }>(
+    "/web-api/user-bidding/api/notification/get-all-user-notification"
+  );
+  return data.result?.content ?? [];
+}
+
+export async function getUnreadCount(): Promise<number> {
+  const data = await fetcher<{ success: boolean; result: number }>(
+    "/web-api/user-bidding/api/notification/get-unread-count"
+  );
+  return data.result ?? 0;
+}
+
+export async function getDocuments(): Promise<unknown[]> {
+  const data = await fetcher<{ success: boolean; result: unknown[] }>(
+    "/web-api/user-bidding/api/document/v2/user/all"
+  );
+  return data.result ?? [];
+}
+
+export async function getPublishDetails(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/publish/get-all-publish-detail");
+}
+
+export async function getCurrentPublish(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/publish/get-current-publish");
+}
+
+export async function getCurrentRegister(): Promise<unknown> {
+  return fetcher("/web-api/user-bidding/api/publish/get-current-register");
+}
+
+export async function getWinnerPriceHistory(params: {
+  licensePlate?: string;
+  page?: number;
+  size?: number;
+}): Promise<unknown> {
+  return poster("/search-api/search/statistic-winner-price-history", {
+    licensePlate: params.licensePlate ?? "",
+    page: params.page ?? 0,
+    size: params.size ?? 25,
+  });
+}
+
+// --- Helpers ---
+
 export function formatPrice(price: number): string {
   return new Intl.NumberFormat("vi-VN").format(price) + " ₫";
 }

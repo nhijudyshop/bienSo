@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "VPA Token Helper",
+  "version": "1.0",
+  "description": "Tự động lấy token sau khi đăng nhập VPA và gửi về bien-so.vercel.app",
+  "permissions": ["activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["https://dgbs.vpa.com.vn/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

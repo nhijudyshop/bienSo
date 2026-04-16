@@ -1,18 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { WarehousePlate } from "@/types";
-import { getWarehousePlates } from "@/lib/api";
+import type { Province, WarehousePlate } from "@/types";
+import { getWarehousePlates, getProvinces } from "@/lib/api";
 import SearchFilters, { type SearchParams } from "@/components/SearchFilters";
 import PlateNumber from "@/components/PlateNumber";
-
-const PROVINCE_MAP: Record<string, string> = {
-  "01": "Thành phố Hà Nội",
-  "79": "Thành phố Hồ Chí Minh",
-  "48": "Thành phố Đà Nẵng",
-  "31": "Thành phố Hải Phòng",
-  "92": "Thành phố Cần Thơ",
-};
 
 export default function KhoBienSoPage() {
   const [plates, setPlates] = useState<WarehousePlate[]>([]);
@@ -20,6 +12,17 @@ export default function KhoBienSoPage() {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentFilters, setCurrentFilters] = useState<SearchParams | undefined>();
+  const [provinceMap, setProvinceMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getProvinces()
+      .then((list) => {
+        const map: Record<string, string> = {};
+        for (const p of list) map[p.code] = p.fullName;
+        setProvinceMap(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchData = useCallback(async (filters?: SearchParams, p = 0) => {
     setLoading(true);
@@ -58,7 +61,7 @@ export default function KhoBienSoPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-center mb-6">KHO BIỂN SỐ</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">KHO BIEN SO</h1>
 
       <SearchFilters onSearch={handleSearch} showDate={false} showColor={false} />
 
@@ -68,23 +71,23 @@ export default function KhoBienSoPage() {
             <thead>
               <tr className="border-b border-border">
                 <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary w-16">STT</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Phiên</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Biển số</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Tỉnh, thành phố</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-text-secondary">Lựa chọn</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Phien</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Bien so</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Tinh, thanh pho</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-text-secondary">Lua chon</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">
-                    Đang tải dữ liệu...
+                    Dang tai du lieu...
                   </td>
                 </tr>
               ) : plates.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">
-                    Không có dữ liệu
+                    Khong co du lieu
                   </td>
                 </tr>
               ) : (
@@ -96,12 +99,17 @@ export default function KhoBienSoPage() {
                       <PlateNumber plate={item.licensePlate} colorCode={item.colorCode} />
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {PROVINCE_MAP[item.provinceCode] || `Mã tỉnh: ${item.provinceCode}`}
+                      {provinceMap[item.provinceCode] || `Ma tinh: ${item.provinceCode}`}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button className="bg-accent-blue hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors">
-                        Yêu cầu đấu giá
-                      </button>
+                      <a
+                        href="https://dgbs.vpa.com.vn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-accent-blue hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block"
+                      >
+                        Yeu cau dau gia
+                      </a>
                     </td>
                   </tr>
                 ))
@@ -134,7 +142,7 @@ export default function KhoBienSoPage() {
         )}
       </div>
 
-      <div className="text-center text-text-secondary text-sm mt-4">Tổng cộng: {total} biển số</div>
+      <div className="text-center text-text-secondary text-sm mt-4">Tong cong: {total} bien so</div>
     </div>
   );
 }

@@ -128,8 +128,8 @@ export function formatPlate(raw: string): string {
   if (!m) return raw;
   const [, prov, seri, num] = m;
   const formatted =
-    num.length === 5
-      ? `${num.slice(0, 3)}.${num.slice(3)}`
-      : `${num.slice(0, 3)}.${num.slice(3)}`;
+    num.length >= 4
+      ? `${num.slice(0, num.length - 2)}.${num.slice(num.length - 2)}`
+      : num;
   return `${prov}${seri}-${formatted}`;
 }

@@ -71,7 +71,8 @@ export default function KetQuaChiTietPage() {
               ) : details.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-text-secondary">
-                    Không có dữ liệu chi tiết (cần đăng nhập hoặc API bị hạn chế)
+                    Khong co du lieu chi tiet. Du lieu co the chua duoc cap nhat hoac can dang nhap tai{" "}
+                    <a href="https://dgbs.vpa.com.vn" target="_blank" rel="noopener noreferrer" className="text-accent-blue underline">dgbs.vpa.com.vn</a>
                   </td>
                 </tr>
               ) : (

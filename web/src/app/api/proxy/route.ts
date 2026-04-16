@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import fallbackData from "@/lib/fallback-data.json";
 
-const TARGET = "https://dgbs.vpa.com.vn";
+const TARGET = process.env.API_TARGET || "https://dgbs.vpa.com.vn";
 
 const fallback = fallbackData as Record<string, unknown>;
+
+const ALLOWED_ENDPOINTS = [
+  "/web-api/user-bidding/api/administrative/provinces",
+  "/search-api/search/list-announcement-plan",
+  "/search-api/search/list-announcement-plan-code",
+  "/search-api/search/get-all-wh-license-plate",
+  "/api/bidding/public-result/history/auction-result-session",
+  "/api/bidding/public-result/history/detail/auction-result-session",
+  "/api/tin-tuc/faq/get-faq",
+  "/api/tin-tuc/public/api/get-public-file",
+  "/web-api/time-control/public/time-info",
+];
+
+function isAllowedEndpoint(endpoint: string): boolean {
+  return ALLOWED_ENDPOINTS.some((allowed) => endpoint === allowed);
+}
 
 function getFallback(endpoint: string): unknown | null {
   if (fallback[endpoint]) return fallback[endpoint];
@@ -18,13 +34,15 @@ export async function GET(request: NextRequest) {
   if (!endpoint) {
     return NextResponse.json({ error: "Missing endpoint" }, { status: 400 });
   }
+  if (!isAllowedEndpoint(endpoint)) {
+    return NextResponse.json({ error: "Endpoint not allowed" }, { status: 403 });
+  }
 
   try {
     const res = await fetch(`${TARGET}${endpoint}`, {
       headers: {
         Accept: "application/json",
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        "User-Agent": "VPA-Web-Proxy/1.0",
       },
     });
 
@@ -48,6 +66,9 @@ export async function POST(request: NextRequest) {
   if (!endpoint) {
     return NextResponse.json({ error: "Missing endpoint" }, { status: 400 });
   }
+  if (!isAllowedEndpoint(endpoint)) {
+    return NextResponse.json({ error: "Endpoint not allowed" }, { status: 403 });
+  }
 
   try {
     const body = await request.json();
@@ -56,8 +77,7 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        "User-Agent": "VPA-Web-Proxy/1.0",
       },
       body: JSON.stringify(body),
     });

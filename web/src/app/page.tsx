@@ -100,9 +100,14 @@ export default function HomePage() {
                     <td className="px-4 py-3 text-sm">{item.provinceName}</td>
                     <td className="px-4 py-3 text-sm">{item.auctionDate || "Chưa có lịch"}</td>
                     <td className="px-4 py-3 text-center">
-                      <button className="bg-accent-green hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors">
-                        Đăng ký đấu giá
-                      </button>
+                      <a
+                        href="https://dgbs.vpa.com.vn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-accent-green hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-block"
+                      >
+                        Dang ky dau gia
+                      </a>
                     </td>
                   </tr>
                 ))

@@ -22,7 +22,7 @@ export default function TatCaBienSoPage() {
         announcementCode: filters?.announcementCode,
         colorCode: filters?.colorCode,
         page: p,
-        size: 30,
+        size: 25,
       });
       setPlates(data.content ?? []);
       setTotal(data.totalElements ?? 0);
@@ -47,7 +47,7 @@ export default function TatCaBienSoPage() {
     fetchData(currentFilters, p);
   }
 
-  const totalPages = Math.ceil(total / 30);
+  const totalPages = Math.ceil(total / 25);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -86,9 +86,14 @@ export default function TatCaBienSoPage() {
                   </div>
                   <div className="text-text-secondary truncate">{item.provinceName}</div>
                 </div>
-                <button className="w-full mt-3 bg-accent-green hover:bg-green-600 text-white py-1.5 rounded-lg text-xs font-medium transition-colors">
-                  Đăng ký đấu giá
-                </button>
+                <a
+                  href="https://dgbs.vpa.com.vn"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full mt-3 bg-accent-green hover:bg-green-600 text-white py-1.5 rounded-lg text-xs font-medium transition-colors text-center"
+                >
+                  Dang ky dau gia
+                </a>
               </div>
             ))}
           </div>

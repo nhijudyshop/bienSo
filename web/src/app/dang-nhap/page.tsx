@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 
+const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+
 export default function DangNhapPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -15,14 +17,23 @@ export default function DangNhapPage() {
     setError("");
 
     if (!phone || !password) {
-      setError("Vui lòng nhập đầy đủ thông tin");
+      setError("Vui long nhap day du thong tin");
+      return;
+    }
+    if (!PHONE_REGEX.test(phone)) {
+      setError("So dien thoai khong hop le (VD: 0912345678)");
+      return;
+    }
+    if (password.length < 8 || password.length > 16) {
+      setError("Mat khau phai tu 8-16 ky tu");
       return;
     }
 
     setLoading(true);
-    // Simulate login - in production this would call the real API
     setTimeout(() => {
-      setError("Chức năng đăng nhập cần tích hợp reCAPTCHA và Cloudflare. Vui lòng sử dụng trang chính dgbs.vpa.com.vn");
+      setError(
+        "Chuc nang dang nhap can tich hop reCAPTCHA va Cloudflare. Vui long su dung trang chinh dgbs.vpa.com.vn"
+      );
       setLoading(false);
     }, 1000);
   }
@@ -36,23 +47,37 @@ export default function DangNhapPage() {
             <div className="w-16 h-16 bg-accent-green rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-2xl">V</span>
             </div>
-            <h1 className="text-2xl font-bold">Đăng nhập</h1>
+            <h1 className="text-2xl font-bold">Dang nhap</h1>
             <p className="text-text-secondary text-sm mt-2">
-              Đăng nhập vào hệ thống đấu giá biển số xe
+              Dang nhap vao he thong dau gia bien so xe
             </p>
+          </div>
+
+          {/* Notice */}
+          <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-lg px-4 py-3 text-sm text-accent-blue mb-4">
+            De dang nhap, vui long su dung{" "}
+            <a
+              href="https://dgbs.vpa.com.vn"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-medium"
+            >
+              dgbs.vpa.com.vn
+            </a>{" "}
+            (can reCAPTCHA)
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                Số điện thoại
+                So dien thoai
               </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="Nhập số điện thoại"
+                placeholder="Nhap so dien thoai"
                 className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-blue"
               />
             </div>
@@ -60,14 +85,14 @@ export default function DangNhapPage() {
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                Mật khẩu
+                Mat khau
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu"
+                  placeholder="Nhap mat khau"
                   className="w-full bg-bg-input border border-border rounded-lg px-4 py-3 text-sm pr-12 focus:outline-none focus:border-accent-blue"
                 />
                 <button
@@ -75,20 +100,17 @@ export default function DangNhapPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary text-sm"
                 >
-                  {showPassword ? "Ẩn" : "Hiện"}
+                  {showPassword ? "An" : "Hien"}
                 </button>
               </div>
             </div>
 
-            {/* Remember + Forgot */}
+            {/* Remember */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" className="rounded border-border" />
-                <span className="text-text-secondary">Ghi nhớ đăng nhập</span>
+                <span className="text-text-secondary">Ghi nho dang nhap</span>
               </label>
-              <Link href="/quen-mat-khau" className="text-sm text-accent-blue hover:underline">
-                Quên mật khẩu?
-              </Link>
             </div>
 
             {/* Error */}
@@ -104,28 +126,31 @@ export default function DangNhapPage() {
               disabled={loading}
               className="w-full bg-accent-green hover:bg-green-600 disabled:opacity-50 text-white py-3 rounded-lg text-sm font-medium transition-colors"
             >
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+              {loading ? "Dang dang nhap..." : "Dang nhap"}
             </button>
           </form>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-border"></div>
-            <span className="text-text-secondary text-xs">HOẶC</span>
+            <span className="text-text-secondary text-xs">HOAC</span>
             <div className="flex-1 h-px bg-border"></div>
           </div>
 
           {/* VNeID */}
           <button className="w-full bg-bg-card hover:bg-bg-input border border-border text-text-primary py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
             <span className="text-accent-blue font-bold">VNeID</span>
-            Đăng nhập bằng VNeID
+            Dang nhap bang VNeID
           </button>
 
           {/* Register link */}
           <p className="text-center text-sm text-text-secondary mt-6">
-            Chưa có tài khoản?{" "}
-            <Link href="/dang-ky" className="text-accent-green hover:underline font-medium">
-              Đăng ký ngay
+            Chua co tai khoan?{" "}
+            <Link
+              href="/dang-ky"
+              className="text-accent-green hover:underline font-medium"
+            >
+              Dang ky ngay
             </Link>
           </p>
         </div>

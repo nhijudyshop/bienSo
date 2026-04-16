@@ -38,9 +38,13 @@ export default function SearchFilters({
   });
 
   useEffect(() => {
-    getProvinces().then(setProvinces).catch(() => {});
+    getProvinces()
+      .then(setProvinces)
+      .catch((err) => console.warn("Failed to load provinces:", err));
     if (showSession) {
-      getAnnouncementPlanCodes().then(setSessions).catch(() => {});
+      getAnnouncementPlanCodes()
+        .then(setSessions)
+        .catch((err) => console.warn("Failed to load sessions:", err));
     }
   }, [showSession]);
 
